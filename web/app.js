@@ -1,6 +1,8 @@
 // Glue: polls /api/state (CONTRACT §4), keeps the view (floor, selection), feeds the scene and the UI.
-// With #<topic> in the link it reads the user's bots from their channel instead (feed.js, lib/feedbase.js): no server.
-// Without either (static preview) it runs on web/data/demo-state.json with a local simulation.
+// With #<topic> (or the older ?feed=<topic>) it reads the user's bots from their channel instead (feed.js,
+// lib/feedbase.js): no server. A bare /office/ with neither uses, in order, the wallpaper's remembered channel
+// (localStorage `gbw.feed`) and window.__GBW_DEFAULT_TOPIC__ when the Pages Function on bot.heapcn.dev set it.
+// Without any of those (static preview, including public *.pages.dev) it runs on web/data/demo-state.json.
 import { initScene, renderScene, zoom, focusBot } from './scene/scene.js';
 import { initSound, sfx } from './audio/sound.js';
 
@@ -132,13 +134,30 @@ async function poll() {
   setTimeout(poll, POLL_MS);
 }
 
-// ---------- the user's own bots: #<topic> ----------
+// ---------- the user's own bots: #<topic>, else the remembered channel, else the host default ----------
 
-const { feedFromLink } = await import('./lib/feedbase.js');
-if (feedFromLink(location)) {                              // #<topic>, #<topic>@<host>, ?feed=<host>#<topic>
+const { resolveOfficeFeed } = await import('./lib/feedbase.js');
+let sticky = '';
+try { sticky = localStorage.getItem('gbw.feed') || ''; } catch { /* private mode: nothing remembered */ }
+const feed = resolveOfficeFeed({
+  hash: location.hash,
+  search: location.search,
+  pathname: location.pathname,
+  sticky,
+  defaultTopic: window.__GBW_DEFAULT_TOPIC__,
+});
+if (feed) {                                                // #<topic>, #<topic>@<host>, ?feed=<host>#<topic>
+  try { localStorage.setItem('gbw.feed', feed.topic); } catch { /* private mode: not remembered */ }
+  // replace() to #<topic> is a same-document navigation and fires hashchange; swallow that one so we connect
+  // here instead of reloading. A later hash edit still starts over.
+  let swallowAdopted = !!feed.replace;
+  addEventListener('hashchange', () => {
+    if (swallowAdopted && location.hash === `#${feed.topic}`) { swallowAdopted = false; return; }
+    location.reload();
+  });
+  if (feed.replace) location.replace(feed.replace);        // keep the path and query; the topic stays in the hash
   const { feedFromHash, connectFeed } = await import('./feed.js');
-  connectFeed(feedFromHash(location.hash, location.search), (data) => { state = data; render(); });
-  addEventListener('hashchange', () => location.reload());   // another channel: start over
+  connectFeed(feedFromHash(feed.hash, feed.search), (data) => { state = data; render(); });
 } else {
   poll();
 }

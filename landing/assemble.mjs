@@ -4,6 +4,12 @@
 // (rea-home/scripts/deploy.mjs). Only these files go out: no journal, keys, source art, test pages or preview renders.
 // A new file the site needs is added here, once, for both sites.
 //   node landing/assemble.mjs <out-dir>
+//
+// functions/ is the Cloudflare Pages Function that injects window.__GBW_DEFAULT_TOPIC__ from env.DEFAULT_TOPIC.
+// The topic is not in the source and is not written into this folder. GitHub Pages serves the copy as a static file
+// (it does not run it). Wrangler compiles the functions directory that sits next to the command: repository-root
+// `functions/` for `npx wrangler pages deploy _site`, or this copy for `npx wrangler pages deploy .` inside the
+// output. Dashboard drag-and-drop does not compile a functions folder.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -34,6 +40,8 @@ const parts = [
   ['assets/office/night', 'assets/office/night', /\.jpg$/],
   ['assets/brand', 'assets/brand', /\.(png|svg)$/],
   ['assets/earth', 'assets/earth', /^(day|night)\.jpg$/],
+  // Pages Function source only. No topic value: it reads env.DEFAULT_TOPIC when the request host is bot.heapcn.dev.
+  ['functions', 'functions', /\.js$/, { deep: true }],
 ];
 
 function copy(src, dst, keep, deep) {
@@ -55,4 +63,14 @@ for (const [from, to, keep, { deep = false, optional = false } = {}] of parts) {
   if (!n && !optional) throw new Error(`nothing to copy from ${from}/ (expected ${keep})`);
   total += n;
 }
+
+// Without this file, Pages invokes the Function for every request (landing, wallpaper, glb). Only the office HTML
+// needs it: that is where the default topic is injected. Static files stay on the free unlimited path.
+const routes = {
+  version: 1,
+  include: ['/office', '/office/', '/office/index.html'],
+  exclude: [],
+};
+fs.mkdirSync(out, { recursive: true });
+fs.writeFileSync(path.join(out, '_routes.json'), `${JSON.stringify(routes, null, 2)}\n`);
 console.log(`assembled ${total} files into ${out}`);
