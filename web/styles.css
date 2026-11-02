@@ -45,9 +45,9 @@
   --on-btn-muted: color-mix(in srgb, rgba(0, 0, 0, .5) var(--n), rgba(255, 255, 255, .6));
   --on-btn-idle: color-mix(in srgb, rgba(0, 0, 0, .22) var(--n), rgba(255, 255, 255, .35));
 
-  /* status colours (Apple system, CONTRACT v2.3) */
-  --working: #34C759; --waiting: #FF9F0A; --error: #FF3B30;
-  --stuck: #FF9500; --done: #0A84FF; --idle: #A1A1A6;
+  /* status colours: warm office board (working green, waiting amber, done honey) */
+  --working: #8FCB4A; --waiting: #F0A040; --error: #E85A4F;
+  --stuck: #E8892A; --done: #E2C07A; --idle: #A89880;
 
   /* readable status text on a tinted chip (darker by day, lighter at night) */
   --ink-working: color-mix(in srgb, #5FD87D var(--n), #1F7A37);
@@ -61,9 +61,9 @@
   --alert-strong: color-mix(in srgb, #FFD590 var(--n), #7A4600);
 
   /* page + scene backdrop */
-  --bg-0: color-mix(in srgb, #1B2240 var(--n), #FFFFFF);
-  --bg-1: color-mix(in srgb, #10162B var(--n), #F3F4F6);
-  --bg-2: color-mix(in srgb, #080B18 var(--n), #E7E9ED);
+  --bg-0: color-mix(in srgb, #2A2118 var(--n), #FFF6EC);
+  --bg-1: color-mix(in srgb, #1A140E var(--n), #F3E6D4);
+  --bg-2: color-mix(in srgb, #100C08 var(--n), #E4D2BC);
 
   /* layout */
   --gutter: 24px;
@@ -73,7 +73,7 @@
   --panel-w: 352px;
   --radius-lg: 22px;
   --radius-md: 16px;
-  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font: "Noto Sans SC", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 /* ui.js adds .bhq-ready after the first paint, so the first theme is applied without a fade. */

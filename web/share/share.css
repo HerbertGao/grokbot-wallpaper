@@ -21,7 +21,7 @@
   appearance: none; border: 0; margin: 0; font: inherit; color: inherit; cursor: pointer;
   -webkit-tap-highlight-color: transparent; touch-action: manipulation;
 }
-:where(.bhq-shr) button:focus-visible { outline: 2px solid #7DB7FF; outline-offset: 2px; }
+:where(.bhq-shr) button:focus-visible { outline: 2px solid #E8A85A; outline-offset: 2px; }
 
 .bhq-shr-x {
   flex: none; width: 28px; height: 28px; border-radius: 14px; display: grid; place-items: center;
