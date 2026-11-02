@@ -32,6 +32,37 @@ export function feedFromLink({ hash = '', search = '' } = {}) {
   return { topic, base, url: base + topic };
 }
 
+/** Bare channel name. This is the only form stored in localStorage `gbw.feed`, the same key face/face.js writes, so a
+ *  channel remembered by the wallpaper opens the office and the other way around. Also accepts a leading `#` or the
+ *  fragment face may hold for a moment (`topic@host`, `topic&ntfy=…`). A URL, a mailbox host or a too-short name is
+ *  not a topic. */
+export function topicToken(raw) {
+  const bare = String(raw ?? '').trim().replace(/^#/, '').split(/[@&]/, 1)[0];
+  return TOPIC.test(bare) ? bare : null;
+}
+
+/** Which channel the office should open, before it falls back to the demo.
+ *  Order: the link (hash, or the older ?feed=<topic>) → sticky `gbw.feed` → defaultTopic
+ *  (`window.__GBW_DEFAULT_TOPIC__`, set only by the Pages Function on bot.heapcn.dev).
+ *  A sticky or default topic is applied as `#<topic>` via `replace` (pathname and the current query stay, so
+ *  ?mode=wallpaper and ?feed=<mailbox> survive). The current link's mailbox (@host, ?feed=<host>, &ntfy=) is kept for
+ *  this visit; what gets remembered is only the bare topic. */
+export function resolveOfficeFeed({ hash = '', search = '', pathname = '', sticky = '', defaultTopic = '' } = {}) {
+  const fromLink = feedFromLink({ hash, search });
+  if (fromLink) return { source: 'link', topic: fromLink.topic, hash, search, replace: null };
+  const stickyTopic = topicToken(sticky);
+  const topic = stickyTopic || topicToken(defaultTopic);
+  if (!topic) return null;
+  const nextHash = `#${topic}`;
+  return {
+    source: stickyTopic ? 'sticky' : 'default',
+    topic,
+    hash: nextHash,
+    search,
+    replace: hash === nextHash ? null : `${pathname}${search}${nextHash}`,
+  };
+}
+
 /** The link form of a base for #<topic>@…: the host (and path) without https://, or '' for the default. */
 export function baseTag(base) {
   return !base || base === FEED_BASE ? '' : base.replace(/^https:\/\//, '').replace(/\/$/, '');
