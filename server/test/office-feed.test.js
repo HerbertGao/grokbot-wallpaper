@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
+import { access, mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -156,6 +156,25 @@ test('no default topic is baked into the office, the function, or the assembled 
     assert.doesNotMatch(JSON.stringify(routes), /gbw-/);
     const entries = await readdir(out);
     assert.equal(entries.includes('functions'), true);
+
+    // Source wallpaper imports web/ui/ui.js. The published copy must import office/ui/ui.js, or face/#topic
+    // requests a missing /ui/ui.js. Office files keep their own relative import of the same module.
+    const srcFace = await read('web/face/face.js');
+    assert.match(srcFace, /import \{ LABEL \} from '\.\.\/ui\/ui\.js'/);
+    const faceFile = path.join(out, 'face/face.js');
+    const face = await readFile(faceFile, 'utf8');
+    const spec = /import \{ LABEL \} from '(\.\.[^']+)'/.exec(face);
+    assert.ok(spec, 'assembled face.js imports LABEL');
+    const faceUi = path.normalize(path.join(path.dirname(faceFile), spec[1]));
+    assert.equal(faceUi, path.join(out, 'office/ui/ui.js'));
+    assert.match(await readFile(faceUi, 'utf8'), /export const LABEL/);
+    await assert.rejects(access(path.join(out, 'ui/ui.js')));
+    for (const rel of ['office/scene/scene.js', 'office/scene/actor.js', 'office/scene/walls.js', 'office/audio/sound.js', 'office/share/share.js', 'office/wallpaper.js']) {
+      const file = path.join(out, rel);
+      const m = /import \{ LABEL \} from '(\.[^']+)'/.exec(await readFile(file, 'utf8'));
+      assert.ok(m, rel);
+      assert.equal(path.normalize(path.join(path.dirname(file), m[1])), path.join(out, 'office/ui/ui.js'), rel);
+    }
   } finally {
     await rm(out, { recursive: true, force: true });
   }

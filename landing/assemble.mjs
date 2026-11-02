@@ -65,6 +65,16 @@ for (const [from, to, keep, { deep = false, optional = false } = {}] of parts) {
   total += n;
 }
 
+// web/face/face.js imports ../ui/ui.js, which is web/ui/ui.js in the repo. This tree publishes that module at
+// office/ui/ui.js (every office file uses the same relative path). Retarget the wallpaper copy only. A second copy
+// at /ui/ui.js would make ../../assets (import.meta.url in ui.js) leave a GitHub Pages subpath.
+const faceJs = path.join(out, 'face/face.js');
+const faceImport = "import { LABEL } from '../ui/ui.js';";
+const faceSrc = fs.readFileSync(faceJs, 'utf8');
+if (faceSrc.split(faceImport).length !== 2) throw new Error(`face/face.js: expected one ${faceImport}`);
+fs.writeFileSync(faceJs, faceSrc.replace(faceImport, "import { LABEL } from '../office/ui/ui.js';"));
+if (!fs.existsSync(path.join(out, 'office/ui/ui.js'))) throw new Error('office/ui/ui.js missing after assemble');
+
 // Without this file, Pages invokes the Function for every request (landing, wallpaper, glb). Only the office HTML
 // needs it: that is where the default topic is injected. Static files stay on the free unlimited path.
 const routes = {
