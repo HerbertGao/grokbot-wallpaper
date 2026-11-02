@@ -10,11 +10,12 @@ export const LIMITS = {
   USAGE_STEP: 0.5,             // usage points (per cent of the limit) that count as work between two usage lines
   UNREPORTED_MS: 24 * 3600e3,  // how long "worked (unreported)" stays up when the bot stays silent
   DONE_MS: 60e3,
+  REST_MS: 30 * 60e3,       // after work ends, 摸鱼 (slacking) until this, then true rest (idle)
   IDLE_MS: 3 * 3600e3,
   MAX_BOTS: 400,
 };
 
-const STATUSES = ['working', 'idle', 'waiting_user', 'error', 'stuck', 'done'];
+const STATUSES = ['working', 'idle', 'waiting_user', 'error', 'stuck', 'done', 'slacking'];
 
 const STATUS_MAP = {
   working: 'working', idle: 'idle', waiting_user: 'waiting_user', error: 'error', done: 'done',
@@ -146,15 +147,17 @@ export class StateStore {
    * @param {boolean} [opts.demo] force the demo flag
    * @param {(avatarId: string) => boolean} [opts.hasAvatar] does assets/blobs/<id>.glb exist? Adds bots[id].has_glb so the
    *   browser can skip probing (and 404-ing) for hand-made models that are not there
-   * @param {number} [opts.quietIdleMs] a `working` bot silent this long counts as idle (the office reading a channel: bots
-   *   forget their closing line). Without it a silent worker turns `stuck` after LIMITS.STUCK_MS (the server).
+   * @param {number} [opts.quietIdleMs] a `working` bot silent this long has left the desk for the purpose of
+   *   `effective()` (the office reading a channel: bots forget their closing line). It becomes `slacking`, then
+   *   `idle` once LIMITS.REST_MS has passed since the last work line. Without it a silent worker turns `stuck`
+   *   after LIMITS.STUCK_MS (the server). Work time still stops at this threshold either way.
    */
   constructor(opts = {}) {
     this.now = opts.now || Date.now;
     this.time = makeTime(opts.tz || 'Europe/Sofia');
     this.demoFlag = !!opts.demo;
     this.hasAvatar = typeof opts.hasAvatar === 'function' ? opts.hasAvatar : null;
-    this.quiet = opts.quietIdleMs > 0 ? { ms: opts.quietIdleMs, to: 'idle' } : { ms: LIMITS.STUCK_MS, to: 'stuck' };
+    this.quiet = opts.quietIdleMs > 0 ? { ms: opts.quietIdleMs, to: 'slacking' } : { ms: LIMITS.STUCK_MS, to: 'stuck' };
     this.lastEventDemo = false;
     this.version = opts.version ?? Math.floor(this.now() / 1000); // unique per process start, so a restart never reuses a client's `since`
     this.dirty = false;
@@ -213,6 +216,7 @@ export class StateStore {
       bot = {
         id, name, group: null, status: 'idle', step: null, task: null,
         sinceMs: null, lastMs: null, seenMs: null, unreported: null, assign: null, work: null,
+        workMs: null, leftMs: null,
         days: new Map(), history: [], eff: 'idle', sig: '',
       };
       this.bots.set(id, bot);
@@ -236,6 +240,7 @@ export class StateStore {
     this.trackWork(bot, status, ms);
     if (status !== prevStatus || bot.sinceMs === null) bot.sinceMs = ms;
     bot.status = status;
+    this.noteLeave(bot, prevStatus, status, ms);
     bot.step = step;
     const task = cleanStr(rec.task, 60);
     bot.task = task ?? (status === 'idle' ? null : bot.task);
@@ -385,17 +390,52 @@ export class StateStore {
     return Math.round(ms / 60000);
   }
 
+  /**
+   * Clock for 摸鱼: the moment work ended, not the latest idle ping.
+   * `working` clears it (they are back). `done` is the completion. The first `idle` after `working`
+   * is the leave. A later idle does not extend it. `waiting_user` / `error` do not start or eat it.
+   */
+  noteLeave(bot, prev, status, ms) {
+    if (status === 'working') {
+      bot.workMs = ms;
+      bot.leftMs = null;
+      return;
+    }
+    if (status === 'done') {
+      bot.workMs = ms;
+      bot.leftMs = ms;
+      return;
+    }
+    if (status === 'idle' && prev === 'working') bot.leftMs = ms;
+  }
+
   // ---------- derived status ----------
 
+  /**
+   * `slacking` (摸鱼) sits between work and true rest. Wire status is unchanged.
+   * `waiting_user`, `error` and server `stuck` are returned as themselves — REST_MS does not eat them.
+   * Anything silent longer than IDLE_MS (3 h) is still `idle`.
+   */
   effective(bot, now) {
     if (bot.lastMs === null) return 'idle';
     const age = now - bot.lastMs;
     if (age > LIMITS.IDLE_MS) return 'idle';
     switch (bot.status) {
-      case 'done': return age <= LIMITS.DONE_MS ? 'done' : 'idle';
-      case 'working': return age > this.quiet.ms ? this.quiet.to : 'working';
+      case 'done': return age <= LIMITS.DONE_MS ? 'done' : this.coasting(bot, now);
+      case 'working':
+        if (age <= this.quiet.ms) return 'working';
+        if (this.quiet.to === 'stuck') return 'stuck';
+        return this.coasting(bot, now);
+      case 'idle': return this.coasting(bot, now);
       default: return bot.status;
     }
+  }
+
+  /** Recent work, not yet a real break: 摸鱼 until REST_MS after the leave (or the last work line, if they never closed). */
+  coasting(bot, now) {
+    const mark = bot.leftMs ?? bot.workMs;
+    if (mark == null) return 'idle';
+    return now - mark < LIMITS.REST_MS ? 'slacking' : 'idle';
   }
 
   /** Re-evaluate everything that depends on time alone. Bumps `version` if a status/minute/day changed. */

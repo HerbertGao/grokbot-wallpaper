@@ -6,13 +6,14 @@ import { LABEL } from '../ui/ui.js';
 
 const STATUS = {
   working: { text: LABEL.working, c: 'var(--working)' },
+  slacking: { text: LABEL.slacking, c: 'var(--slacking)' },
   waiting_user: { text: LABEL.waiting_user, c: 'var(--waiting)' },
   error: { text: LABEL.error, c: 'var(--error)' },
   stuck: { text: LABEL.stuck, c: 'var(--stuck)' },
   done: { text: LABEL.done, c: 'var(--done)' },
   idle: { text: LABEL.idle, c: 'var(--idle)' },
 };
-const ORDER = ['waiting_user', 'error', 'stuck', 'working', 'done', 'idle'];
+const ORDER = ['waiting_user', 'error', 'stuck', 'working', 'done', 'slacking', 'idle'];
 const SHAPES = ['sphere', 'rounded_square', 'pill', 'triangle', 'pentagon', 'hexagon', 'star4', 'star6', 'clover', 'rounded_cube', 'cone', 'trio', 'cloud', 'bubble', 'flower', 'drop'];
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -291,7 +292,7 @@ const byName = (a, b) => String(a.name).localeCompare(String(b.name));
 
 function render(st) {
   const bots = Object.values(st.bots || {});
-  const counts = { working: 0, waiting_user: 0, error: 0, stuck: 0, done: 0, idle: 0 };
+  const counts = { working: 0, slacking: 0, waiting_user: 0, error: 0, stuck: 0, done: 0, idle: 0 };
   for (const b of bots) counts[statusOf(b)]++;
   const waiting = counts.waiting_user + counts.stuck;
   countTo($('n-working'), counts.working);
@@ -657,21 +658,50 @@ function applyLine(text, time) {                         // a status, roster, lo
   if (!name) return false;
   const id = botId(name), b = state.bots[id] || (state.bots[id] = { id, name });
   const word = String(ev.status ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const prev = b.status;
+  const step = String(ev.step ?? '').slice(0, 80);
+  const next = WORDS[word] || (step ? 'working' : 'idle');
+  const ms = Date.parse(at);
+  if (next === 'working') { b.workMs = ms; b.leftMs = null; }
+  else if (next === 'done') { b.workMs = ms; b.leftMs = ms; }
+  else if (next === 'idle' && prev === 'working') b.leftMs = ms;
   b.name = name;
-  b.step = String(ev.step ?? '').slice(0, 80);
-  b.status = b.effective_status = WORDS[word] || (b.step ? 'working' : 'idle');
+  b.step = step;
+  b.status = next;
   b.last_event = at;
+  b.effective_status = faceEffective(b, Date.now());
   return true;
 }
-// the channel keeps 12 hours, the wallpaper remembers every bot it has seen: a quiet bot stays on screen, resting
+// Same clock as web/lib/state.js, for the eyes page reading the channel itself (the office page uses the reducer).
+const FACE_DONE_MS = 60e3, FACE_QUIET_MS = 20 * 60e3, FACE_REST_MS = 30 * 60e3;
+function faceEffective(b, now) {
+  const last = Date.parse(b.last_event);
+  const age = Number.isFinite(last) ? now - last : Infinity;
+  const status = b.status || 'idle';
+  if (status === 'waiting_user' || status === 'error' || status === 'stuck') return status;
+  if (status === 'working') {
+    if (age <= FACE_QUIET_MS) return 'working';
+    const mark = Number.isFinite(b.workMs) ? b.workMs : last;
+    return now - mark < FACE_REST_MS ? 'slacking' : 'idle';
+  }
+  if (status === 'done' && age <= FACE_DONE_MS) return 'done';
+  // Same order as StateStore.coasting (web/lib/state.js): leftMs, else workMs. A working → waiting_user|error → idle
+  // path never sets leftMs, so the last work line still keeps 摸鱼 for REST_MS. done→last only if neither was stored.
+  const mark = Number.isFinite(b.leftMs) ? b.leftMs
+    : Number.isFinite(b.workMs) ? b.workMs
+    : (status === 'done' && Number.isFinite(last) ? last : null);
+  if (mark != null && now - mark < FACE_REST_MS) return 'slacking';
+  return 'idle';
+}
+// the channel keeps 12 hours, the wallpaper remembers every bot it has seen: a quiet bot stays on screen
 const MEMORY_KEY = `gbw.bots.${FEED}`;
 function remember() { try { localStorage.setItem(MEMORY_KEY, JSON.stringify({ bots: state.bots, looks, usage: state.usage })); } catch { /* not remembered */ } }
-function settleQuiet() {                                 // a finished task rests after 30 min, a silent one after 3 h
+function settleQuiet() {                                 // done flashes, then 摸鱼, then rest; a silent worker follows the same 20 / 30 min
   const now = Date.now();
   let changed = false;
   for (const b of Object.values(state.bots)) {
-    const quiet = now - Date.parse(b.last_event);
-    if ((b.status === 'done' && quiet > 30 * 60e3) || (b.status === 'working' && quiet > 3 * 3600e3)) { b.status = b.effective_status = 'idle'; changed = true; }
+    const eff = faceEffective(b, now);
+    if (b.effective_status !== eff) { b.effective_status = eff; changed = true; }
   }
   return changed;
 }

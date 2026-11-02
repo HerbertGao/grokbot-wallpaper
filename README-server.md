@@ -96,8 +96,11 @@ first sight and stay stable while the server runs (after a restart they are rebu
 - Lines over 4 KB are skipped (`meta.too_long`), non-JSON lines are counted in `meta.parse_errors`.
 - Status synonyms: `waiting` -> `waiting_user`, `failed` -> `error`, `finished` -> `done` (and a few more);
   an unknown status becomes `working` if a `step` is present.
-- `effective_status`: `stuck` = working and silent for over 30 min; `done` shows for 60 s, then `idle`;
-  silent for over 3 h = `idle`. A 1 s timer re-evaluates this, so `version` changes when only time passed.
+- `effective_status`: `stuck` = working and silent for over 30 min (this server). `done` shows for 60 s, then
+  `slacking` (摸鱼) until 30 min after the work ended, then `idle`. An explicit `idle` right after work is
+  `slacking` for those same 30 min. `waiting_user` / `error` / `stuck` are not changed by that window.
+  Silent for over 3 h = `idle`. The office feed (quiet window 20 min) demotes a silent worker to `slacking`
+  instead of `stuck`, then `idle` at 30 min. A 1 s timer re-evaluates this, so `version` changes when only time passed.
 - `version` starts at the unix time of the server start (so a restart never reuses a client's `since`) and
   increases by one per real change.
 

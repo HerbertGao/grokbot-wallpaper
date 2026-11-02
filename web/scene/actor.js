@@ -7,11 +7,11 @@ import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { Spring, REDUCED, clamp, smoothstep } from './spring.js';
 
 export const STATUS_COLOR = {
-  working: '#34C759', idle: '#A1A1A6', waiting_user: '#FF9F0A', error: '#FF3B30', stuck: '#FF9500', done: '#0A84FF',
+  working: '#34C759', slacking: '#7E97AD', idle: '#A1A1A6', waiting_user: '#FF9F0A', error: '#FF3B30', stuck: '#FF9500', done: '#0A84FF',
 };
 const STATUS_LABEL = {
   waiting_user: LABEL.chip.waiting_user, error: LABEL.chip.error, stuck: LABEL.ui.stuckAsk,
-  done: LABEL.chip.done, working: LABEL.chip.working, idle: LABEL.chip.idle,
+  done: LABEL.chip.done, working: LABEL.chip.working, slacking: LABEL.chip.slacking, idle: LABEL.chip.idle,
 };
 const CAMERA_YAW = Math.PI / 4;     // isometric camera sits on +X +Z
 const RESTING_TURN = 0.42;          // blobs lean toward the camera a bit
@@ -274,6 +274,7 @@ export class Actor {
       const breathe = Math.sin(t * 2.1 + this.phase);
       sy = 1 + 0.018 * breathe; sx = 1 - 0.012 * breathe;
       if (s === 'working') { y = 0.012 * Math.abs(Math.sin(t * 9 + this.phase)); rx = 0.06; }
+      if (s === 'slacking') rx = 0.1 + 0.035 * Math.sin(t * 0.55 + this.phase);   // slumped at the desk, a slow nod, no bounce
       if (s === 'stuck') rz = 0.09 * Math.sin(t * 1.3 + this.phase);
       if (s === 'error') {
         const k = (t + this.phase) % 1.6;
@@ -320,7 +321,7 @@ export class Actor {
       if (dist < LOOK_RANGE) { w = smoothstep(LOOK_RANGE, LOOK_RANGE - 1.3, dist); lookYaw = Math.atan2(dx, dz); }
     }
     this.hopCooldown -= dt;
-    if (dist < HOP_RANGE && this.hopCooldown <= 0 && !this.anim && !REDUCED) { this.hop(0.26); this.hopCooldown = HOP_COOLDOWN; }
+    if (dist < HOP_RANGE && this.hopCooldown <= 0 && !this.anim && !REDUCED && s !== 'slacking') { this.hop(0.26); this.hopCooldown = HOP_COOLDOWN; }
 
     const base = (this.baseYaw || 0) + (this.anim?.kind === 'travel' ? 0 : RESTING_TURN);
     let target = base;
@@ -368,11 +369,15 @@ export class Actor {
     const s = this.status;
     let open = 1;
     if (s === 'idle' && !this.spotIsLounge()) open = 0.12;        // sleeping at the desk
+    else if (s === 'slacking') open = 0.38;                       // half-awake, still at the desk
     else if (s === 'error') open = 0.55;
     else if (s === 'stuck') open = 0.7;
-    if (open > 0.5 && !REDUCED) {
+    if ((open > 0.5 || s === 'slacking') && !REDUCED) {
       this.nextBlink -= dt;
-      if (this.nextBlink <= 0) { this.blinkT = 0; this.nextBlink = 2.2 + Math.random() * 3.5; }
+      if (this.nextBlink <= 0) {
+        this.blinkT = 0;
+        this.nextBlink = (s === 'slacking' ? 5.5 : 2.2) + Math.random() * (s === 'slacking' ? 4 : 3.5);
+      }
       if (this.blinkT >= 0) {
         this.blinkT += dt;
         const b = this.blinkT / 0.16;

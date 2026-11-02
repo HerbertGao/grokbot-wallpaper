@@ -228,7 +228,7 @@ function settle(seconds = 3) {
   }
 }
 
-// Idle bots go to the lounge while seats last; the rest nap at their desks.
+// True rest (idle) goes to the lounge while seats last. 摸鱼 (slacking) stays at the desk.
 function assignLounge(bots) {
   const map = new Map();
   const seats = assets.spots.lounges.filter(Boolean);

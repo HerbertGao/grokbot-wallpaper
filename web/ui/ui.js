@@ -42,6 +42,7 @@ const LS_DOCK = 'bothq.dock';
 // Chinese does not inflect, so each counter pair is [one, many] with the same word in both slots.
 export const LABEL = {
   working: '工作中',
+  slacking: '摸鱼中',
   idle: '休息中',
   waiting_user: '等你回复',
   error: '出错',
@@ -49,6 +50,7 @@ export const LABEL = {
   done: '已完成',
   count: {
     working: ['工作中', '工作中'],
+    slacking: ['摸鱼中', '摸鱼中'],
     waiting_user: ['等待中', '等待中'],
     error: ['出错', '出错'],
     stuck: ['卡住', '卡住'],
@@ -61,6 +63,7 @@ export const LABEL = {
   },
   chip: {
     working: '工作中',
+    slacking: '摸鱼中',
     idle: '休息中',
     waiting_user: '等你回复',
     error: '出错',
@@ -189,6 +192,7 @@ const SUMMARY = [
   { key: 'working', s: 'working', lead: true, n: (c) => c.working },
   { key: 'attention', s: 'waiting_user', alert: true, n: (c) => c.waiting_user + c.stuck },
   { key: 'error', s: 'error', alert: true, n: (c) => c.error },
+  { key: 'slacking', s: 'slacking', n: (c) => c.slacking, hideZero: true },
   { key: 'idle', s: 'idle', n: (c) => c.idle },
   { key: 'done', s: 'done', n: (c) => c.done, hideZero: true },
 ];
@@ -468,7 +472,7 @@ function updateFade(el) {
 function updateFades() { for (const el of U.fades) updateFade(el); }
 
 function counts(state) {
-  const out = { working: 0, idle: 0, waiting_user: 0, error: 0, stuck: 0, done: 0 };
+  const out = { working: 0, slacking: 0, idle: 0, waiting_user: 0, error: 0, stuck: 0, done: 0 };
   const bots = state.bots;
   if (bots && typeof bots === 'object' && Object.keys(bots).length) {
     for (const id of Object.keys(bots)) {
@@ -1290,7 +1294,7 @@ function renderTopbar(state) {
 
 function countsText(c) {
   const parts = [];
-  for (const s of ['working', 'waiting_user', 'error', 'stuck', 'done', 'idle']) {
+  for (const s of ['working', 'slacking', 'waiting_user', 'error', 'stuck', 'done', 'idle']) {
     const n = Number(c && c[s]) || 0;
     if (n > 0) parts.push(n + ' ' + statusWord(s, n));
   }
@@ -1458,16 +1462,17 @@ function renderTeam(state, floor, o) {
 
   setText(p.teamTitle, floor ? floor.name || floor.id : LABEL.ui.noFloor);
   const n = ids.length;
-  let working = 0, waiting = 0, errors = 0;
+  let working = 0, waiting = 0, errors = 0, slacking = 0;
   for (const id of ids) {
     const s = effStatus(bots[id]);
     if (s === 'working') working++;
     else if (s === 'waiting_user' || s === 'stuck') waiting++;
     else if (s === 'error') errors++;
+    else if (s === 'slacking') slacking++;
   }
   setText(p.teamSub, floor ? n + ' ' + plural(n, LABEL.count.bot[0], LABEL.count.bot[1]) : (U.phone ? LABEL.ui.pickFloorAbove : LABEL.ui.pickFloorLeft));
-  // green while anyone works, graphite at rest (the wallpaper's team card)
-  setAttr(p.teamHead, 'data-s', working > 0 ? 'working' : 'idle');
+  // green while anyone works; subdued while the floor is only coasting; graphite at true rest
+  setAttr(p.teamHead, 'data-s', working > 0 ? 'working' : slacking > 0 ? 'slacking' : 'idle');
   setNum(p.teamBig, working, animate);
   setNum(p.nWait, waiting, animate);
   setNum(p.nErr, errors, animate);
@@ -1487,8 +1492,9 @@ function renderTeam(state, floor, o) {
     const s = effStatus(bot);
     setAvatar(c.av, bot, s);
     setText(c.name, bot.name || id);
-    const unrep = s === 'idle' ? unreportedText(bot) : '';
-    const quiet = s === 'idle' && bot.status === 'working';   // went silent mid-task: its last step is stale
+    const coasting = s === 'idle' || s === 'slacking';
+    const unrep = coasting ? unreportedText(bot) : '';
+    const quiet = coasting && bot.status === 'working';   // went silent mid-task: its last step is stale
     setText(c.step, unrep || (quiet ? statusLabel(s) : bot.step || statusLabel(s)));
     setAttr(c.step, 'data-u', unrep ? '' : null);
     const seenAt = parseTs(bot.last_seen);
@@ -1530,8 +1536,9 @@ function renderCard(state, bot) {
   const age = since == null ? '' : ' · ' + (now - since < 60000 ? LABEL.ui.justNow : fmtDur(now - since));
   setText(c.stTxt, (LABEL.chip[s] || statusLabel(s)) + age);
 
-  const unrep = s === 'idle' ? unreportedText(bot) : '';
-  setText(c.now, unrep || (s === 'idle' && bot.status === 'working' ? LABEL.ui.wentQuiet + (bot.step || LABEL.ui.aTask) : bot.step || LABEL.ui.noStepData));
+  const coasting = s === 'idle' || s === 'slacking';
+  const unrep = coasting ? unreportedText(bot) : '';
+  setText(c.now, unrep || (coasting && bot.status === 'working' ? LABEL.ui.wentQuiet + (bot.step || LABEL.ui.aTask) : bot.step || LABEL.ui.noStepData));
 
   // Task: hide when empty, id-like ("tsk-1643") or a plain copy of the current step.
   const task = typeof bot.task === 'string' ? bot.task.trim() : '';

@@ -177,13 +177,15 @@ const STEPS = {
   waiting_user: ['等你回复：要发布吗？', '需要确认预算', '选哪一个方案？'],
   error: ['X 接口限流 429，15 分钟后重试', '打不开报告文件'],
   done: ['完成：报告已发出', '草稿好了', '任务已关闭'],
+  slacking: ['刚忙完，在工位上歇一会儿', '暂时没什么新任务'],
   idle: ['在等新任务'],
 };
 const TASKS = ['周一的 AI 智能体串文', '系列帖的封面', '每周触达报告',
   '竞品帖拆解', '各楼层汇总', '本周计划'];
 const NEXT = {
   working: [['working', 5], ['done', 3], ['waiting_user', 1], ['error', 0.5]],
-  done: [['idle', 3], ['working', 2]],
+  done: [['slacking', 3], ['working', 2]],
+  slacking: [['slacking', 3], ['idle', 2], ['working', 2]],
   idle: [['working', 3], ['idle', 2]],
   waiting_user: [['working', 2], ['waiting_user', 2]],
   error: [['working', 2], ['error', 1]],
@@ -219,7 +221,7 @@ function simulate() {
 }
 
 function recount() {
-  const zero = () => ({ working: 0, idle: 0, waiting_user: 0, error: 0, stuck: 0, done: 0 });
+  const zero = () => ({ working: 0, slacking: 0, idle: 0, waiting_user: 0, error: 0, stuck: 0, done: 0 });
   state.summary = { ...zero(), total: 0 };
   for (const f of state.floors) f.counts = zero();
   for (const b of Object.values(state.bots)) {

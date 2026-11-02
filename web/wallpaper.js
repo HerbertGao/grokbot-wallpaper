@@ -13,6 +13,7 @@ import { LABEL } from './ui/ui.js';
 
 const FORMS = {
   working: LABEL.count.working,
+  slacking: LABEL.count.slacking,
   attention: [LABEL.waiting_user, LABEL.waiting_user],
   error: LABEL.count.error,
 };
@@ -45,7 +46,7 @@ export function initUI() {
   el.setAttribute('aria-live', 'off');         // a wallpaper must not chatter at screen readers every second
   rest = Object.assign(document.createElement('span'), { className: 'wp-seg wp-rest' });
   rest.hidden = true;
-  el.append(seg('working', 'wp-working'), seg('attention', 'wp-attention'), seg('error', 'wp-error'), rest);
+  el.append(seg('working', 'wp-working'), seg('slacking', 'wp-slacking'), seg('attention', 'wp-attention'), seg('error', 'wp-error'), rest);
   el.hidden = true;                             // shown with the first state, so it never flashes an empty pill
   document.body.append(el);
 }
@@ -55,23 +56,25 @@ function show(node, on) { if (node.hidden !== !on) node.hidden = !on; }
 
 export function renderUI(state) {
   if (!el || !state) return;
-  let working = 0, attention = 0, error = 0, total = 0;
+  let working = 0, slacking = 0, attention = 0, error = 0, total = 0;
   for (const bot of Object.values(state.bots || {})) {
     total++;
     switch (bot.effective_status || bot.status) {
       case 'working': working++; break;
+      case 'slacking': slacking++; break;
       case 'waiting_user': case 'stuck': attention++; break;
       case 'error': error++; break;
       default: break;
     }
   }
-  const counts = { working, attention, error };
+  const counts = { working, slacking, attention, error };
   for (const key of Object.keys(counts)) {
     const n = counts[key], s = segs[key];
     show(s.root, n > 0);
     if (n > 0) { set(s.num, String(n)); set(s.label, ' ' + plural(n, FORMS[key])); }
   }
-  const quiet = working + attention + error === 0;
+  // 都在休息 only when nobody is working, coasting, waiting or in error. A mix of 摸鱼 and true rest is not "all resting".
+  const quiet = working + slacking + attention + error === 0;
   show(rest, quiet);
   if (quiet) set(rest, total ? LABEL.ui.allResting : LABEL.ui.noBotsYet);
   show(el, true);

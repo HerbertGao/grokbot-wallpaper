@@ -47,7 +47,7 @@
 
   /* status colours: warm office board (working green, waiting amber, done honey) */
   --working: #8FCB4A; --waiting: #F0A040; --error: #E85A4F;
-  --stuck: #E8892A; --done: #E2C07A; --idle: #A89880;
+  --stuck: #E8892A; --done: #E2C07A; --slacking: #7E97AD; --idle: #A89880;
 
   /* readable status text on a tinted chip (darker by day, lighter at night) */
   --ink-working: color-mix(in srgb, #5FD87D var(--n), #1F7A37);
@@ -196,6 +196,7 @@ html.wallpaper.wp-tags .hq-labels { display: block; }
 .wp-num { font-weight: 650; font-variant-numeric: tabular-nums; color: var(--ink); margin-right: 0; }
 .wp-seg > span { margin-left: .3em; }
 .wp-working .wp-dot { background: var(--working); box-shadow: 0 0 0 3px color-mix(in srgb, var(--working) 22%, transparent); }
+.wp-slacking .wp-dot { background: var(--slacking); box-shadow: 0 0 0 3px color-mix(in srgb, var(--slacking) 22%, transparent); }
 .wp-attention { color: var(--alert-ink); }
 .wp-attention .wp-num { color: var(--alert-strong); }
 .wp-attention .wp-dot { background: var(--waiting); box-shadow: 0 0 0 3px color-mix(in srgb, var(--waiting) 24%, transparent); }
