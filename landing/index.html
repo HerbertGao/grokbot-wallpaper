@@ -14,11 +14,11 @@ addEventListener('hashchange', toOffice);                  // the link pasted in
 <meta name="description" content="A live wallpaper that keeps an eye on your cursor and on your bots. Free for Windows with Lively Wallpaper; Mac app coming soon.">
 <meta name="theme-color" content="#FFFFFF">
 <meta property="og:type" content="website">
-<link rel="canonical" href="https://0xcodila.com/grokbot-wallpaper/">
-<meta property="og:url" content="https://0xcodila.com/grokbot-wallpaper/">
+<link rel="canonical" href="https://herbertgao.github.io/grokbot-wallpaper/">
+<meta property="og:url" content="https://herbertgao.github.io/grokbot-wallpaper/">
 <meta property="og:title" content="Grok Bot Wallpaper">
 <meta property="og:description" content="A live wallpaper that keeps an eye on your cursor and on your bots.">
-<meta property="og:image" content="https://0xcodila.com/grokbot-wallpaper/og.png">
+<meta property="og:image" content="https://herbertgao.github.io/grokbot-wallpaper/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -561,7 +561,7 @@ footer .links { display: flex; flex-wrap: wrap; gap: 6px 24px; }
                 <span class="pick__thumb" aria-hidden="true"></span>
               </div></div>
             <div class="actions">
-              <p class="link__url" id="wall-url"><span>https://</span>bodila51.github.io/<wbr><b class="nb">grokbot-wallpaper/face/</b><wbr><span class="suffix" data-suffix="?"></span></p>
+              <p class="link__url" id="wall-url"><span>https://</span>herbertgao.github.io/<wbr><b class="nb">grokbot-wallpaper/face/</b><wbr><span class="suffix" data-suffix="?"></span></p>
               <button class="btn btn--light copy" type="button" id="copy"><span aria-live="polite">Copy link</span></button>
             </div>
           </div>
@@ -631,7 +631,7 @@ footer .links { display: flex; flex-wrap: wrap; gap: 6px 24px; }
               <pre class="code code--link" id="wall-link" hidden></pre>
             </div>
           </div>
-          <p class="connect__fine">Your topic works like a password: keep it to yourself. Status lines go through ntfy.sh and stay there for 12 hours. Running your own Bot HQ server instead? <a href="https://github.com/Bodila51/grokbot-wallpaper#readme" target="_blank" rel="noopener">Read the setup on GitHub</a>.</p>
+          <p class="connect__fine">Your topic works like a password: keep it to yourself. Status lines go through ntfy.sh and stay there for 12 hours. Running your own Bot HQ server instead? <a href="https://github.com/HerbertGao/grokbot-wallpaper#readme" target="_blank" rel="noopener">Read the setup on GitHub</a>.</p>
         </div>
       </div>
     </div>
@@ -745,7 +745,7 @@ document.querySelectorAll('[data-fullscreen]').forEach((a) => a.addEventListener
 }));
 
 // Copy link: the label blurs into "Copied" and back, so the change reads as one button changing its mind.
-const LINK = 'https://bodila51.github.io/grokbot-wallpaper/face/';
+const LINK = 'https://herbertgao.github.io/grokbot-wallpaper/face/';
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 function relabel(label, text) {
   if (calm.matches || !label.animate) { label.textContent = text; return; }
@@ -818,7 +818,7 @@ fetch('PROMPT.md', { cache: 'no-cache' }).then((r) => (r.ok ? r.text() : Promise
   promptBox.textContent = (fenced ? fenced[1] : md).trim();
   document.querySelector('[data-copy="prompt"]').disabled = false;
 }).catch(() => {
-  promptBox.innerHTML = 'The prompt did not load. <a href="https://github.com/Bodila51/grokbot-wallpaper/blob/main/PROMPT.md" target="_blank" rel="noopener">Open it on GitHub</a>.';
+  promptBox.innerHTML = 'The prompt did not load. <a href="https://github.com/HerbertGao/grokbot-wallpaper/blob/main/PROMPT.md" target="_blank" rel="noopener">Open it on GitHub</a>.';
 });
 document.querySelectorAll('#own [data-copy]').forEach((btn) => btn.addEventListener('click', () => {
   const box = document.getElementById(btn.dataset.copy);

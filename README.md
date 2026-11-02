@@ -1,5 +1,11 @@
 # Grok Bot Wallpaper
 
+**HerbertGao fork / Herbert 的自托管看板。** 简体中文界面，暖石墨与琥珀配色，不是上游默认皮。数据仍走现有中继 `relay.0xcodila.com`（本分支不改中继托管）。
+
+- 看板：`https://herbertgao.github.io/grokbot-wallpaper/office/#<topic>`
+- 壁纸：`https://herbertgao.github.io/grokbot-wallpaper/face/#<topic>`
+- 落地页把 `/#<topic>` 转到 `office/`。`<topic>` 只放在链接的 hash 里，不要写进仓库。
+
 Live wallpaper and dashboard for your Grok Bot bots (an independent project, not affiliated with the makers of Grok Bot): a 3D office where every bot is a glossy blob at a desk on the top floor of an endless tower,
 and you see in real time who is working, who is stuck and who is waiting for you. No AI at runtime: bots append one
 line per step to a journal, a tiny Node server tails it, the browser renders the office.
@@ -17,8 +23,8 @@ Each bot runs one `curl` on its own box whenever its status changes and sends a 
 ### Setup
 
 1. Copy the block from `PROMPT.md` and paste it into your Grok Bot once. It makes the topic (`gbw-` plus 22 random letters and digits), saves the posting rule in the shared memory of all your bots, posts the roster and a look for each bot, and sets up the daily and 2-hourly routines.
-2. The bot replies with two links. Open the dashboard in a browser: `https://bodila51.github.io/grokbot-wallpaper/#<topic>`.
-3. For the wallpaper, use the second link as a web wallpaper in Lively (Windows, `lively/README.md`) or the Mac app (`mac/README.md`): `https://bodila51.github.io/grokbot-wallpaper/face/#<topic>`.
+2. The bot replies with two links. Open the dashboard in a browser: `https://herbertgao.github.io/grokbot-wallpaper/office/#<topic>`.
+3. For the wallpaper, use the second link as a web wallpaper in Lively (Windows, `lively/README.md`) or the Mac app (`mac/README.md`): `https://herbertgao.github.io/grokbot-wallpaper/face/#<topic>`.
 
 ### The line formats
 
