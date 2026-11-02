@@ -1,8 +1,9 @@
 // Live wall screen ("Today · <floor>") and task board, drawn on canvases that texture the meshes
 // `wall_screen` and `task_board` of the open floor (CONTRACT v2.5). Redrawn only when the data changes (≤ 1/s).
 import * as THREE from 'three';
+import { LABEL } from '../ui/ui.js';
 
-const FONT = 'Inter, system-ui, -apple-system, "Segoe UI", sans-serif';
+const FONT = '"Noto Sans SC", Inter, system-ui, -apple-system, "Segoe UI", sans-serif';
 const STATUS = { working: '#34C759', waiting_user: '#FF9F0A', error: '#FF3B30', stuck: '#FF9500', done: '#0A84FF', idle: '#A1A1A6' };
 const RANK = { waiting_user: 0, error: 0, stuck: 0, working: 1, done: 2, idle: 3 };
 const TSK_ID = /^tsk-\d+$/i;
@@ -13,9 +14,9 @@ const fontsPromise = (async () => {
     if (document.fonts) {
       await Promise.race([
         Promise.all([
-          document.fonts.load('600 24px Inter', 'Today Tasks 0123456789'),
-          document.fonts.load('500 24px Inter', 'Working events'),
-          document.fonts.load('700 24px Inter', '0123456789'),
+          document.fonts.load('600 24px "Noto Sans SC"', '今天任务工作'),
+          document.fonts.load('500 24px "Noto Sans SC"', '正在工作事件'),
+          document.fonts.load('700 24px "Noto Sans SC"', '0123456789'),
         ]).then(() => document.fonts.ready),
         new Promise((r) => setTimeout(r, 2500)),
       ]);
@@ -156,7 +157,7 @@ export class WallDisplays {
     bg.addColorStop(0, '#14171C'); bg.addColorStop(1, '#0B0D10');
     g.fillStyle = bg; g.fillRect(0, 0, W, H);
     const glow = g.createRadialGradient(W * 0.2, 0, 0, W * 0.2, 0, W * 0.7);
-    glow.addColorStop(0, 'rgba(52,199,89,0.10)'); glow.addColorStop(1, 'rgba(52,199,89,0)');
+    glow.addColorStop(0, 'rgba(232,160,74,0.16)'); glow.addColorStop(1, 'rgba(232,160,74,0)');
     g.fillStyle = glow; g.fillRect(0, 0, W, H);
 
     const bots = d.bots;
@@ -170,8 +171,8 @@ export class WallDisplays {
     g.textBaseline = 'alphabetic';
     g.fillStyle = '#8E8E93'; g.font = `500 32px ${FONT}`;
     let nx;
-    if (this.accent) nx = this.accentDot(g, 'Today', 44, 62, 51, 20);
-    else { g.fillText('Today · ', 44, 62); nx = 44 + g.measureText('Today · ').width; }
+    if (this.accent) nx = this.accentDot(g, LABEL.ui.today, 44, 62, 51, 20);
+    else { g.fillText(LABEL.ui.todayPrefix, 44, 62); nx = 44 + g.measureText(LABEL.ui.todayPrefix).width; }
     g.fillStyle = '#F5F5F7'; g.font = `650 40px ${FONT}`;
     g.fillText(ellipsize(g, d.floorName || '', 744 - nx), nx, 62);
     // live dot
@@ -179,10 +180,10 @@ export class WallDisplays {
     g.fillStyle = 'rgba(52,199,89,0.25)'; g.beginPath(); g.arc(W - 52, 50, 14, 0, 7); g.fill();
 
     const tiles = [
-      [`${working} of ${bots.length}`, 'working now'],
-      [String(events), 'events today'],
-      [String(done), 'tasks done'],
-      [hours.toFixed(1), 'hours worked'],
+      [`${working}/${bots.length}`, LABEL.ui.workingNow],
+      [String(events), LABEL.ui.eventsToday],
+      [String(done), LABEL.ui.tasksDone],
+      [hours.toFixed(1), LABEL.ui.hoursLabel],
     ];
     const tw = 205, gap = 14, x0 = 44, y0 = 100;
     tiles.forEach(([val, label], i) => {
@@ -197,7 +198,7 @@ export class WallDisplays {
     // 24-bar hourly chart, current hour highlighted
     const cx = 44, cw = W - 88, cy = 250, ch = 220;
     g.fillStyle = '#8E8E93'; g.font = `500 17px ${FONT}`;
-    g.fillText('Events by hour', cx, cy - 4);
+    g.fillText(LABEL.ui.eventsByHour, cx, cy - 4);
     const max = Math.max(1, ...hourly);
     const slot = cw / 24, bw = slot * 0.62;
     for (let i = 0; i < 24; i++) {
@@ -224,14 +225,14 @@ export class WallDisplays {
   drawBoard(d) {
     const { g, tex, S, W, H } = this.board;
     g.setTransform(S, 0, 0, S, 0, 0);
-    g.fillStyle = '#F1F0EC'; g.fillRect(0, 0, W, H);
-    g.fillStyle = '#FAF9F6'; g.fillRect(0, 0, W, 68);
-    g.fillStyle = '#E3E0D9'; g.fillRect(0, 68, W, 2);
+    g.fillStyle = '#F3E6D4'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#FFF6EA'; g.fillRect(0, 0, W, 68);
+    g.fillStyle = '#E4D0B8'; g.fillRect(0, 68, W, 2);
 
     g.fillStyle = '#1D1D1F'; g.font = `700 34px ${FONT}`;
     let nx;
-    if (this.accent) nx = this.accentDot(g, 'Tasks', 36, 49, 37, 20);
-    else { g.fillText('Tasks', 36, 49); nx = 36 + g.measureText('Tasks ').width; }
+    if (this.accent) nx = this.accentDot(g, LABEL.ui.tasks, 36, 49, 37, 20);
+    else { g.fillText(LABEL.ui.tasks, 36, 49); nx = 36 + g.measureText(LABEL.ui.tasks + ' ').width; }
     g.fillStyle = '#6E6E73'; g.font = `600 26px ${FONT}`;
     g.fillText(`${this.accent ? '' : '· '}${ellipsize(g, d.floorName || '', 420)}`, nx, 49);
 
@@ -244,7 +245,7 @@ export class WallDisplays {
     }
     if (!shown.length) {
       g.fillStyle = '#8E8E93'; g.font = `600 28px ${FONT}`;
-      g.fillText('Nobody on this floor yet', 36, 160);
+      g.fillText(LABEL.ui.nobodyOnFloor, 36, 160);
     }
 
     const cols = 4, pad = 30, gap = 16, top = 90;

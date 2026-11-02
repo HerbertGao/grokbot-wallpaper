@@ -2,13 +2,17 @@
 // v2.5 behaviour: blobs turn toward the cursor (ground point within ~3.5 m, seated bots with a limited turn),
 // their eyes follow it, they hop when the cursor is within ~0.9 m. Everything moves on springs.
 import * as THREE from 'three';
+import { LABEL } from '../ui/ui.js';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { Spring, REDUCED, clamp, smoothstep } from './spring.js';
 
 export const STATUS_COLOR = {
   working: '#34C759', idle: '#A1A1A6', waiting_user: '#FF9F0A', error: '#FF3B30', stuck: '#FF9500', done: '#0A84FF',
 };
-const STATUS_LABEL = { waiting_user: 'Waiting for you', error: 'Error', stuck: 'Stuck?', done: 'Done', working: 'Working', idle: 'Resting' };
+const STATUS_LABEL = {
+  waiting_user: LABEL.chip.waiting_user, error: LABEL.chip.error, stuck: LABEL.ui.stuckAsk,
+  done: LABEL.chip.done, working: LABEL.chip.working, idle: LABEL.chip.idle,
+};
 const CAMERA_YAW = Math.PI / 4;     // isometric camera sits on +X +Z
 const RESTING_TURN = 0.42;          // blobs lean toward the camera a bit
 const MODEL_HEIGHT = 1.0;

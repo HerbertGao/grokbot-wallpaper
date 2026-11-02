@@ -22,21 +22,21 @@ const rgb = (hex) => { const c = new THREE.Color(hex); c.convertLinearToSRGB(); 
 // bake: share of the night lightmaps; tint: linear multiplier of the baked surfaces (the room's ambient light);
 // floorSun / floorSunC: the sun on the baked floor (1 = as bright as the bake's own sunlit floor); glass: the curtain wall.
 const P = (o) => o;
-const DAY = P({
+const DAY = P({                                          // Codila board: warm paper, amber fill, no cool studio blue
   night: 0, bake: 0, lamps: 0, windows: 0,
-  sunI: 2.4, sunC: rgb('#FFF1DE'),
-  hemiI: 1.05, hemiSky: rgb('#F3F2F0'), hemiGnd: rgb('#CFC8BE'),
-  fillI: 0.35, fillC: rgb('#E6EEFF'), envI: 0.5, exposure: 1.05,
-  shadow: 0.34, tint: [1.42, 1.43, 1.46], floorSun: 0.72, floorSunC: rgb('#FFF6EC'),
-  glassC: rgb('#D2E4F2'), glassA: 0.22, glassE: 0.12,
+  sunI: 2.35, sunC: rgb('#FFE2B8'),
+  hemiI: 1.02, hemiSky: rgb('#F6E6D2'), hemiGnd: rgb('#CDB59A'),
+  fillI: 0.36, fillC: rgb('#FFD7A8'), envI: 0.48, exposure: 1.04,
+  shadow: 0.36, tint: [1.55, 1.38, 1.12], floorSun: 0.78, floorSunC: rgb('#FFE0B0'),
+  glassC: rgb('#E7C9A0'), glassA: 0.28, glassE: 0.16,
 });
-const MORNING = P({                                       // fresh: near-white floor, cool shade, pale sky in the glass
+const MORNING = P({                                       // warm dawn, honey glass, not a cool blue morning
   night: 0, bake: 0, lamps: 0, windows: 0.05,
-  sunI: 2.6, sunC: rgb('#FFEFD9'),
-  hemiI: 1.0, hemiSky: rgb('#E1EAFF'), hemiGnd: rgb('#C6CAD2'),
-  fillI: 0.38, fillC: rgb('#DCE6FF'), envI: 0.5, exposure: 1.07,
-  shadow: 0.36, tint: [2.05, 2.15, 2.35], floorSun: 0.72, floorSunC: rgb('#FFEEDA'),
-  glassC: rgb('#A6CCF2'), glassA: 0.82, glassE: 0.5,
+  sunI: 2.5, sunC: rgb('#FFD7A4'),
+  hemiI: 0.98, hemiSky: rgb('#F3D7B4'), hemiGnd: rgb('#C6AA8C'),
+  fillI: 0.36, fillC: rgb('#FFCFA0'), envI: 0.48, exposure: 1.05,
+  shadow: 0.36, tint: [1.9, 1.55, 1.05], floorSun: 0.74, floorSunC: rgb('#FFD9A8'),
+  glassC: rgb('#F0C48A'), glassA: 0.72, glassE: 0.42,
 });
 const GOLDEN = P({                                        // sunset: warm amber room, glowing glass, long golden light
   night: 0, bake: 0, lamps: 0.15, windows: 0.15,
@@ -62,13 +62,13 @@ const DUSK = P({                                          // after sunset: lamps
   shadow: 0.32, tint: [1.3, 1.02, 0.84], floorSun: 0, floorSunC: rgb('#FFD27E'),
   glassC: rgb('#4A5487'), glassA: 0.8, glassE: 0.5,
 });
-const NIGHT = P({                                         // dim warm room, lamp pools on the desks, deep navy glass
+const NIGHT = P({                                         // dim amber room, lamp pools on the desks, warm dark glass
   night: 1, bake: 0.6, lamps: 1, windows: 1,
-  sunI: 0.2, sunC: rgb('#8CA6FF'),
-  hemiI: 0.4, hemiSky: rgb('#6A6158'), hemiGnd: rgb('#2A2420'),
-  fillI: 0.15, fillC: rgb('#8C8098'), envI: 0.2, exposure: 1.0,
-  shadow: 0.4, tint: [0.95, 0.8, 0.62], floorSun: 0, floorSunC: rgb('#FFEBD2'),
-  glassC: rgb('#1A2A66'), glassA: 0.92, glassE: 0.5,
+  sunI: 0.2, sunC: rgb('#C4A574'),
+  hemiI: 0.4, hemiSky: rgb('#6A5648'), hemiGnd: rgb('#2A2018'),
+  fillI: 0.15, fillC: rgb('#A08060'), envI: 0.2, exposure: 1.0,
+  shadow: 0.4, tint: [1.05, 0.82, 0.55], floorSun: 0, floorSunC: rgb('#FFE0B0'),
+  glassC: rgb('#3A2A22'), glassA: 0.92, glassE: 0.45,
 });
 
 function mixParams(a, b, t) {

@@ -13,9 +13,10 @@ import { Actor } from './actor.js';
 import { generateBlob } from './blobgen.js';
 import { Spring, clamp } from './spring.js';
 import { sofiaHour, fontsPromise } from './walls.js';
+import { LABEL } from '../ui/ui.js';
 
 // Relative to the page (not the site root), so the office also works when it is published in a sub-folder, e.g.
-// https://bodila51.github.io/grokbot-wallpaper/office/ -> ../assets. Locally the page is at `/`, where this is /assets.
+// https://herbertgao.github.io/grokbot-wallpaper/office/ -> ../assets. Locally the page is at `/`, where this is /assets.
 const ASSETS = '../assets';
 const ISO_DIR = new THREE.Vector3(1, 1, 1).normalize();
 const HOME = { x: -0.4, y: -0.3, z: 0.3 };             // camera target relative to the active floor's surface
@@ -81,7 +82,7 @@ export function initScene(el, cbs = {}) {
     loadingEl = document.createElement('div');
     loadingEl.className = 'hq-loading';
     loadingEl.setAttribute('role', 'status');
-    loadingEl.innerHTML = '<span class="hq-loading-label">Building the office</span><span class="hq-loading-track"><i></i></span>';
+    loadingEl.innerHTML = `<span class="hq-loading-label">${LABEL.ui.loading}</span><span class="hq-loading-track"><i></i></span>`;
     container.append(loadingEl);
   }
 
@@ -146,7 +147,12 @@ function ensureAssets() {
   if (!document.querySelector('link[href*="family=Inter"]')) {
     const l = document.createElement('link');
     l.rel = 'stylesheet';
-    l.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap';
+    l.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=Noto+Sans+SC:wght@500;700;900&display=swap';
+    document.head.append(l);
+  } else if (!document.querySelector('link[href*="Noto+Sans+SC"]')) {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700;900&display=swap';
     document.head.append(l);
   }
 }

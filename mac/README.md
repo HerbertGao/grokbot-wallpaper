@@ -30,8 +30,8 @@ After that it opens like any app. It has no Dock icon, only the 👀 icon in the
 - **Bot: White / Black** picks the bot's colour. The choice is remembered and re-applied after every reload.
   Until you pick one, the page decides (white, or `?bot=black` in the wallpaper address).
 - **Reload wallpaper** reloads the page, e.g. after a design update.
-- **Wallpaper address…** sets the page to show. Default: `https://bodila51.github.io/grokbot-wallpaper/face/`.
-  A topic link like `https://bodila51.github.io/grokbot-wallpaper/face/#your-topic` works (`https://` may be left
+- **Wallpaper address…** sets the page to show. Default: `https://herbertgao.github.io/grokbot-wallpaper/face/`.
+  A topic link like `https://herbertgao.github.io/grokbot-wallpaper/face/#your-topic` works (`https://` may be left
   out), and so does your own bot server: `http://localhost:8787/face/?key=…`
   (see [README-server.md](../README-server.md)). **Default** goes back to the demo.
 - **Launch at login** starts the wallpaper when you log in. If macOS wants approval,

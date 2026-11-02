@@ -7,13 +7,14 @@
  *
  * Attention = waiting_user + stuck (both need a human), highlighted; errors get their own red segment.
  * Style lives in web/styles.css under "wallpaper mode". All data goes in through textContent.
+ * Status words come from LABEL in web/ui/ui.js (the same map as the office).
  */
+import { LABEL } from './ui/ui.js';
 
-// English plural forms [one, other].
 const FORMS = {
-  working: ['working', 'working'],
-  attention: ['waiting for you', 'waiting for you'],
-  error: ['error', 'errors'],
+  working: LABEL.count.working,
+  attention: [LABEL.waiting_user, LABEL.waiting_user],
+  error: LABEL.count.error,
 };
 
 function plural(n, [one, other]) {
@@ -72,6 +73,6 @@ export function renderUI(state) {
   }
   const quiet = working + attention + error === 0;
   show(rest, quiet);
-  if (quiet) set(rest, total ? 'all resting' : 'no bots yet');
+  if (quiet) set(rest, total ? LABEL.ui.allResting : LABEL.ui.noBotsYet);
   show(el, true);
 }

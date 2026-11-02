@@ -11,14 +11,14 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
-// Wool-and-ceramic colours (sRGB): sage, eucalyptus, slate, lilac, mauve, clay, ochre.
-export const ACCENTS = ['#9CAA93', '#86A4A1', '#8E9DB1', '#A49EB9', '#BB9CA6', '#C79F89', '#CDB27F'];
+// Warm wool and clay (sRGB): honey, clay, amber, terracotta, oak, sand, copper. Herbert's board, not the cool upstream set.
+export const ACCENTS = ['#C4A06A', '#A67C52', '#D4B483', '#C4896A', '#8C6A4A', '#E0B060', '#B8956A'];
 export const LAYOUTS = ['sofa', 'media', 'library', 'meeting'];
 
 const SUN = [0.85, 1.25];                 // floor offset of a shadow per metre of height, read off the baked floor
-const SHADOW_RGB = '26,30,42';             // cool near-black, like the studio shadow
+const SHADOW_RGB = '48,32,18';             // warm near-black, like the amber studio shadow
 const PLUME_A = 0.3;                       // a baked sweep shadow darkens the floor by about 30 %
-const FLOOR_RGB = [240, 235, 227];         // the baked floor around the lounge
+const FLOOR_RGB = [236, 220, 196];         // the warm baked floor around the lounge
 const ZONE = { x0: 3.03, x1: 8.0, z0: -0.12, z1: 4.7 };   // clean patch over the GLB lounge's baked shadows
 const DROPS = [[4.13, -0.3], [4.13, 3.9]]; // baked shadows of two desk pendants, partly inside the patch
 const PPM = 128, SPPM = 64;                // px per metre: patch and rug textures, shadow layers
