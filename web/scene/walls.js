@@ -4,8 +4,8 @@ import * as THREE from 'three';
 import { LABEL } from '../ui/ui.js';
 
 const FONT = '"Noto Sans SC", Inter, system-ui, -apple-system, "Segoe UI", sans-serif';
-const STATUS = { working: '#34C759', waiting_user: '#FF9F0A', error: '#FF3B30', stuck: '#FF9500', done: '#0A84FF', idle: '#A1A1A6' };
-const RANK = { waiting_user: 0, error: 0, stuck: 0, working: 1, done: 2, idle: 3 };
+const STATUS = { working: '#34C759', slacking: '#7E97AD', waiting_user: '#FF9F0A', error: '#FF3B30', stuck: '#FF9500', done: '#0A84FF', idle: '#A1A1A6' };
+const RANK = { waiting_user: 0, error: 0, stuck: 0, working: 1, done: 2, slacking: 3, idle: 4 };
 const TSK_ID = /^tsk-\d+$/i;
 
 let fontsReady = false;
@@ -236,7 +236,7 @@ export class WallDisplays {
     g.fillStyle = '#6E6E73'; g.font = `600 26px ${FONT}`;
     g.fillText(`${this.accent ? '' : '· '}${ellipsize(g, d.floorName || '', 420)}`, nx, 49);
 
-    const sorted = [...d.bots].sort((a, b) => (RANK[a.effective_status || a.status] ?? 3) - (RANK[b.effective_status || b.status] ?? 3) || String(a.name).localeCompare(String(b.name)));
+    const sorted = [...d.bots].sort((a, b) => (RANK[a.effective_status || a.status] ?? 4) - (RANK[b.effective_status || b.status] ?? 4) || String(a.name).localeCompare(String(b.name)));
     const shown = sorted.slice(0, 8), extra = sorted.length - shown.length;
     if (extra > 0) {
       g.textAlign = 'right'; g.fillStyle = '#515154'; g.font = `700 28px ${FONT}`;

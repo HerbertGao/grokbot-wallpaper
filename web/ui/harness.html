@@ -81,11 +81,12 @@
     const STEPS = {
       working: ['writing a post draft', 'collecting data', 'checking sources', 'drawing banner, option 2', 'counting reach of 40 posts', 'sorting new bookmarks', 'matching monthly spend'],
       idle: ['file ready, waiting for a new task', 'stopped, nothing running', 'Friday storm is ready'],
+      slacking: ['just finished, still at the desk', 'nothing new for the moment'],
       waiting_user: ['waiting for your reply: which thread?', 'need an ok on the $40 budget', 'need a choice: option A or B'],
       error: ['X limit 429, retry in 15 min', 'page did not open, timeout'],
       done: ['report ready', 'note published'],
     };
-    const MIX = ['working', 'working', 'working', 'working', 'idle', 'idle', 'waiting_user', 'error', 'done', 'stuck'];
+    const MIX = ['working', 'working', 'working', 'working', 'slacking', 'idle', 'idle', 'waiting_user', 'error', 'done', 'stuck'];
     const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
     const res = await fetch('../data/demo-state.json');
@@ -149,9 +150,9 @@
     let tick = 0;
 
     function recount() {
-      const sum = { working: 0, idle: 0, waiting_user: 0, error: 0, stuck: 0, done: 0, total: 0 };
+      const sum = { working: 0, slacking: 0, idle: 0, waiting_user: 0, error: 0, stuck: 0, done: 0, total: 0 };
       for (const f of state.floors) {
-        f.counts = { working: 0, idle: 0, waiting_user: 0, error: 0, stuck: 0, done: 0 };
+        f.counts = { working: 0, slacking: 0, idle: 0, waiting_user: 0, error: 0, stuck: 0, done: 0 };
         for (const id of f.bots) {
           const s = state.bots[id].effective_status;
           f.counts[s]++; sum[s]++; sum.total++;

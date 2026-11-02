@@ -57,7 +57,7 @@ test('stuck: working with no event for > 30 min; version bumps on the timer alon
   assert.equal(st.floors[0].counts.stuck, 1);
 });
 
-test('done is visible for 60 s, then idle', () => {
+test('done is visible for 60 s, then slacking, then idle after 30 min', () => {
   const { store, clock, ev } = make();
   ev('X Writer', 'done', 'драфт готов');
   assert.equal(store.snapshot().bots['x-writer'].effective_status, 'done');
@@ -65,10 +65,99 @@ test('done is visible for 60 s, then idle', () => {
   assert.equal(store.snapshot().bots['x-writer'].effective_status, 'done');
   const v = store.version;
   clock.advance(2e3);
-  const st = store.snapshot();
-  assert.equal(st.bots['x-writer'].effective_status, 'idle');
+  let st = store.snapshot();
+  assert.equal(st.bots['x-writer'].effective_status, 'slacking');
   assert.equal(st.bots['x-writer'].status, 'done');
+  assert.equal(st.summary.slacking, 1);
+  assert.equal(st.summary.idle, 0);
   assert.equal(store.version, v + 1);
+  clock.advance(LIMITS.REST_MS - 61e3 - 1000);
+  assert.equal(store.snapshot().bots['x-writer'].effective_status, 'slacking');
+  clock.advance(2000);
+  st = store.snapshot();
+  assert.equal(st.bots['x-writer'].effective_status, 'idle');
+  assert.equal(st.summary.idle, 1);
+  assert.equal(st.summary.slacking, 0);
+});
+
+test('idle right after work is slacking until 30 min since the leave, then true rest', () => {
+  const { store, clock, ev } = make();
+  ev('A', 'working', '写');
+  clock.advance(5e3);
+  ev('A', 'idle', '');
+  assert.equal(store.snapshot().bots.a.effective_status, 'slacking');
+  assert.equal(store.snapshot().bots.a.status, 'idle');
+  clock.advance(MIN);
+  ev('A', 'working', '又来了');
+  assert.equal(store.snapshot().bots.a.effective_status, 'working');
+  clock.advance(2e3);
+  ev('A', 'idle', '');
+  assert.equal(store.snapshot().bots.a.effective_status, 'slacking');
+  clock.advance(LIMITS.REST_MS - 1000);
+  assert.equal(store.snapshot().bots.a.effective_status, 'slacking');
+  clock.advance(2000);
+  assert.equal(store.snapshot().bots.a.effective_status, 'idle');
+});
+
+test('a later idle ping does not extend 摸鱼, and idle with no work stays idle', () => {
+  const { store, clock, ev } = make();
+  ev('A', 'working', '写');
+  clock.advance(1000);
+  ev('A', 'idle', '');
+  clock.advance(10 * MIN);
+  ev('A', 'idle', '还在');                 // not a new leave
+  clock.advance(LIMITS.REST_MS - 10 * MIN - 1000);
+  assert.equal(store.snapshot().bots.a.effective_status, 'slacking');
+  clock.advance(2000);
+  assert.equal(store.snapshot().bots.a.effective_status, 'idle');
+
+  ev('B', 'idle', null);
+  assert.equal(store.snapshot().bots.b.effective_status, 'idle');
+  clock.advance(5 * MIN);
+  assert.equal(store.snapshot().bots.b.effective_status, 'idle');
+});
+
+test('done then idle keeps the clock on the done line', () => {
+  const { store, clock, ev } = make();
+  ev('A', 'done', '好了');
+  clock.advance(70e3);
+  assert.equal(store.snapshot().bots.a.effective_status, 'slacking');
+  clock.advance(10 * MIN);
+  ev('A', 'idle', '');                     // prev is done: does not restart the 30 min
+  const left = LIMITS.REST_MS - 70e3 - 10 * MIN;
+  clock.advance(left - 1000);
+  assert.equal(store.snapshot().bots.a.effective_status, 'slacking');
+  clock.advance(2000);
+  assert.equal(store.snapshot().bots.a.effective_status, 'idle');
+});
+
+test('waiting_user and error are not eaten by the 30 min rest rule', () => {
+  const { store, clock, ev } = make();
+  ev('A', 'waiting_user', '等你');
+  ev('B', 'error', '挂了');
+  clock.advance(LIMITS.REST_MS + MIN);
+  const st = store.snapshot();
+  assert.equal(st.bots.a.effective_status, 'waiting_user');
+  assert.equal(st.bots.b.effective_status, 'error');
+  assert.equal(st.summary.slacking, 0);
+  assert.equal(st.summary.idle, 0);
+});
+
+test('quiet working demotes to slacking, then idle at 30 min, never stuck', () => {
+  const { store, clock, ev } = make({ quietIdleMs: 20 * MIN });
+  ev('Nova', 'working', 'Drafting');
+  clock.advance(15 * MIN);
+  assert.equal(store.snapshot().bots.nova.effective_status, 'working');
+  clock.advance(7 * MIN);                  // 22 min since the work line
+  let st = store.snapshot();
+  assert.equal(st.bots.nova.effective_status, 'slacking');
+  assert.equal(st.bots.nova.status, 'working');
+  assert.equal(st.summary.stuck, 0);
+  assert.equal(st.summary.idle, 0);
+  clock.advance(8 * MIN);                  // 30 min
+  st = store.snapshot();
+  assert.equal(st.bots.nova.effective_status, 'idle');
+  assert.equal(st.summary.slacking, 0);
 });
 
 test('anything silent for more than 3 h becomes idle', () => {
@@ -151,8 +240,8 @@ test('summary and floor counts add up', () => {
   ev('C', 'failed', 'x', { group: 'G' });
   ev('D', 'finished', 'x', { group: 'G' });
   const st = store.snapshot();
-  assert.deepEqual(st.summary, { working: 1, idle: 0, waiting_user: 1, error: 1, stuck: 0, done: 1, total: 4 });
-  assert.deepEqual(st.floors[0].counts, { working: 1, idle: 0, waiting_user: 1, error: 1, stuck: 0, done: 1 });
+  assert.deepEqual(st.summary, { working: 1, idle: 0, waiting_user: 1, error: 1, stuck: 0, done: 1, slacking: 0, total: 4 });
+  assert.deepEqual(st.floors[0].counts, { working: 1, idle: 0, waiting_user: 1, error: 1, stuck: 0, done: 1, slacking: 0 });
 });
 
 test('history keeps 20, feed keeps 100, newest first', () => {
@@ -351,6 +440,18 @@ test('look: normLook edge cases', () => {
   assert.equal(normLook({ shape: 'pill', color: '2d9cdb' }).color, '#2D9CDB', 'the leading # is optional');
   assert.equal(normLook({ shape: 'pill', color: '#2d9cdbff' }).color, null);
   assert.equal(normLook({ shape: 42, color: 42 }), null);
+});
+
+test('slacking is derived: Chinese label, not a wire status', async () => {
+  const { LABEL } = await import('../../web/ui/ui.js');
+  assert.equal(LABEL.slacking, '摸鱼中');
+  assert.equal(LABEL.idle, '休息中');
+  assert.equal(LABEL.working, '工作中');
+  assert.equal(LABEL.done, '已完成');
+  assert.equal(LABEL.chip.slacking, '摸鱼中');
+  assert.equal(LABEL.count.slacking[0], '摸鱼中');
+  assert.equal(normalizeStatus('slacking', false, 'idle'), 'idle');
+  assert.equal(normalizeStatus('slacking', true), 'working');
 });
 
 test('look: the server vocabulary matches the one the browser uses', () => {

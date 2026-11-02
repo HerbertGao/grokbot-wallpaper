@@ -44,7 +44,7 @@ function make() {
   return { store, at: (ms) => { now = ms; }, iso: (ms) => new Date(ms).toISOString() };
 }
 
-test('office fallbacks: a silent worker turns idle after 20 min, last_seen ignores roster entries', () => {
+test('office fallbacks: a silent worker is slacking after 20 min and idle after 30, last_seen ignores roster entries', () => {
   const { store, at, iso } = make();
   store.apply({ t: iso(T0), bot: 'Nova', status: 'idle', step: '', listed: true });   // the roster line
   let st = store.snapshot();
@@ -56,8 +56,14 @@ test('office fallbacks: a silent worker turns idle after 20 min, last_seen ignor
   assert.equal(Date.parse(st.bots.nova.last_seen), T0 + MIN);
   at(T0 + 22 * MIN);
   st = store.snapshot();
-  assert.equal(st.bots.nova.effective_status, 'idle');
+  assert.equal(st.bots.nova.effective_status, 'slacking');
   assert.equal(st.summary.stuck, 0);
+  assert.equal(st.summary.idle, 0);
+  assert.equal(st.bots.nova.today.working_min, 20);
+  at(T0 + MIN + 30 * MIN);
+  st = store.snapshot();
+  assert.equal(st.bots.nova.effective_status, 'idle');
+  assert.equal(st.summary.slacking, 0);
   assert.equal(st.bots.nova.today.working_min, 20);
 });
 

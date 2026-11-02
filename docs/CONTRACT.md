@@ -85,11 +85,11 @@ nothing changed. Browser polls every 1000 ms (no SSE in v1: Cloudflare quick tun
   "version": 412,
   "now": "2026-10-31T19:00:00+02:00",
   "demo": true,
-  "summary": {"working": 6, "idle": 5, "waiting_user": 2, "error": 1, "stuck": 1, "done": 0, "total": 15},
+  "summary": {"working": 6, "idle": 5, "waiting_user": 2, "error": 1, "stuck": 1, "done": 0, "slacking": 0, "total": 15},
   "usage": {"period": "week", "total_used_pct": 37, "resets_at": "2026-11-03T00:00:00+02:00", "updated_at": "2026-10-31T18:00:00+02:00"},
   "floors": [
     {"id": "x-content", "name": "X-контент", "order": 2, "bots": ["x-writer", "qt-scout"],
-     "counts": {"working": 4, "idle": 3, "waiting_user": 1, "error": 0, "stuck": 1, "done": 0}, "free_desks": 11}
+     "counts": {"working": 4, "idle": 3, "waiting_user": 1, "error": 0, "stuck": 1, "done": 0, "slacking": 0}, "free_desks": 11}
   ],
   "bots": {
     "x-writer": {
@@ -105,8 +105,10 @@ nothing changed. Browser polls every 1000 ms (no SSE in v1: Cloudflare quick tun
   "feed": [{"t": "2026-10-31T18:58:40+02:00", "bot": "x-writer", "name": "X Writer", "status": "working", "step": "..."}]
 }
 ```
-- `effective_status` adds derived states: `stuck` (working, no event > 30 min), `done` shown for 60 s then
-  `idle`, anything silent > 3 h → `idle`.
+- `effective_status` adds derived states the bots never post: `stuck` (server: working, no event > 30 min),
+  `slacking` (摸鱼 — work just ended, until 30 min after that leave), `done` shown for 60 s then `slacking`.
+  True `idle` only after 30 min without work. `waiting_user` / `error` / `stuck` are not demoted by that 30 min.
+  Anything silent > 3 h → `idle`. Wire `status` stays `working|idle|waiting_user|error|done`.
 - `desk`: 1..20, stable per bot within its floor (assignment order = first seen).
 - `usage_share`: bot's share of `total_used_pct` (0..1) — drives the fuel bar. `history` = last 20 events,
   newest first. `feed` = last 100 events across all bots, newest first.
@@ -348,8 +350,8 @@ Product rule from v2 made concrete: any user's bots get a blob without Blender.
 - **Rate:** no duplicate consecutive statuses (the rule says so). The free ntfy.sh takes about 250 messages a day; the
   prompt and the landing say so.
 - **Office fallbacks** (`web/lib/state.js` with `quietIdleMs`, set by `web/feed.js` to 20 min):
-  - a `working` bot with no new line for 20 min is `idle` (`effective_status`), not `stuck`; its work time stops there.
-    The local server keeps the v1 rule (`stuck` after 30 min).
+  - a `working` bot with no new line for 20 min is `slacking` (`effective_status`), then `idle` at 30 min after that
+    work line, not `stuck`; its work time stops at 20 min. The local server keeps the v1 rule (`stuck` after 30 min).
   - `bots[id].last_seen` = ISO time of the bot's own last status line (`null` if it never posted; a roster line does not
     count). The floor team list shows it on every row ("12m"), the bot card as "seen 12 min ago".
   - `bots[id].unreported` = `{ from, to }` (ISO) when the bot's usage rose by ≥ 0.5 points between two usage lines and it

@@ -51,6 +51,7 @@
 
 /* status hook: any element with data-s gets --s, the colour of its status (a dot, an orb, a tint) */
 :where(#topbar, #floors, #panel, #feed, .bhq-dock, .bhq-sheet) [data-s="working"] { --s: #8FCB4A; }
+:where(#topbar, #floors, #panel, #feed, .bhq-dock, .bhq-sheet) [data-s="slacking"] { --s: #7E97AD; }
 :where(#topbar, #floors, #panel, #feed, .bhq-dock, .bhq-sheet) [data-s="idle"] { --s: #A89880; }
 :where(#topbar, #floors, #panel, #feed, .bhq-dock, .bhq-sheet) [data-s="waiting_user"] { --s: #F0A040; }
 :where(#topbar, #floors, #panel, #feed, .bhq-dock, .bhq-sheet) [data-s="error"] { --s: #E85A4F; }
@@ -74,6 +75,7 @@
   animation: bhq-in .7s var(--bhq-spring) backwards;
 }
 .bhq-surface[data-s="working"] { --base: #2F4A17; --glow: #9BDC3C; --hi: #E7FF8C; --mid: #C2E784; --dim: #A5C96E; --g1: .5; --g2: .22; }
+.bhq-surface[data-s="slacking"] { --base: #243240; --glow: #8FB4D4; --hi: #E7F1F8; --mid: #C5D6E4; --dim: #96B0C4; --g1: .32; --g2: .12; }
 .bhq-surface[data-s="waiting_user"], .bhq-surface[data-s="stuck"] { --base: #6E3F06; --glow: #FFB23A; --hi: #FFE2A6; --mid: #FFD28E; --dim: #E8B968; --g1: .5; --g2: .22; }
 .bhq-surface[data-s="error"] { --base: #8C1620; --glow: #FF4A5E; --hi: #FFE1E4; --mid: #FFB8BF; --dim: #F0959F; --g1: .5; --g2: .22; }
 .bhq-surface[data-s="done"] { --base: #6A4E22; --glow: #E2C07A; --hi: #FFF6E4; --mid: #F0D7A4; --dim: #D4B57A; --g1: .5; --g2: .22; }
@@ -98,6 +100,7 @@
   box-shadow: 0 0 4px color-mix(in srgb, var(--s, #8E8E93) 45%, transparent);
 }
 .bhq-dot[data-s="idle"], .bhq-dot:not([data-s]) { box-shadow: none; }
+.bhq-dot[data-s="slacking"] { box-shadow: 0 0 3px color-mix(in srgb, var(--s) 40%, transparent); }
 .bhq-sep { flex: none; width: 1px; height: 16px; background: rgba(255, 255, 255, .12); }
 
 /* a 3D bot avatar (thumbnail), the status orb on its corner; resting bots are dimmed */
@@ -124,6 +127,7 @@
   outline: 2px solid var(--base, #2C241C); box-shadow: 0 0 5px color-mix(in srgb, var(--s, #A89880) 50%, transparent);
 }
 .bhq-ava--lg .bhq-orb { width: 13px; height: 13px; right: 0; bottom: 1px; outline-width: 2.5px; }
+.bhq-ava[data-s="slacking"] .bhq-av-img { opacity: .88; }
 .bhq-ava[data-s="idle"] .bhq-orb { display: none; }
 .bhq-ava[data-s="idle"] .bhq-av-img { opacity: .5; }
 .bhq-hero .bhq-ava[data-s="idle"] .bhq-av-img { opacity: .8; }
