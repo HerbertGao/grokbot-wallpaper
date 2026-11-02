@@ -685,7 +685,11 @@ function faceEffective(b, now) {
     return now - mark < FACE_REST_MS ? 'slacking' : 'idle';
   }
   if (status === 'done' && age <= FACE_DONE_MS) return 'done';
-  const mark = Number.isFinite(b.leftMs) ? b.leftMs : (status === 'done' && Number.isFinite(last) ? last : null);
+  // Same order as StateStore.coasting (web/lib/state.js): leftMs, else workMs. A working → waiting_user|error → idle
+  // path never sets leftMs, so the last work line still keeps 摸鱼 for REST_MS. done→last only if neither was stored.
+  const mark = Number.isFinite(b.leftMs) ? b.leftMs
+    : Number.isFinite(b.workMs) ? b.workMs
+    : (status === 'done' && Number.isFinite(last) ? last : null);
   if (mark != null && now - mark < FACE_REST_MS) return 'slacking';
   return 'idle';
 }

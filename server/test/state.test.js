@@ -131,6 +131,27 @@ test('done then idle keeps the clock on the done line', () => {
   assert.equal(store.snapshot().bots.a.effective_status, 'idle');
 });
 
+test('idle after waiting_user or error still coasts from the last work line', () => {
+  // faceEffective uses the same mark as coasting: leftMs, else workMs. This path never sets leftMs.
+  const { store, clock, ev } = make();
+  ev('A', 'working', '写');
+  clock.advance(2 * MIN);
+  ev('A', 'waiting_user', '等你');
+  clock.advance(3 * MIN);
+  ev('A', 'idle', '');
+  assert.equal(store.snapshot().bots.a.effective_status, 'slacking');
+  ev('B', 'working', '写');
+  clock.advance(MIN);
+  ev('B', 'error', '挂了');
+  clock.advance(MIN);
+  ev('B', 'idle', '');
+  assert.equal(store.snapshot().bots.b.effective_status, 'slacking');
+  clock.advance(LIMITS.REST_MS);
+  const st = store.snapshot();
+  assert.equal(st.bots.a.effective_status, 'idle');
+  assert.equal(st.bots.b.effective_status, 'idle');
+});
+
 test('waiting_user and error are not eaten by the 30 min rest rule', () => {
   const { store, clock, ev } = make();
   ev('A', 'waiting_user', '等你');
