@@ -6,7 +6,7 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; height: 100%; overflow: hidden; }
-body { font-family: -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; user-select: none; cursor: default; }
+body { font-family: "Noto Sans SC", -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; user-select: none; cursor: default; }
 .num { font-variant-numeric: tabular-nums; }
 
 /* ---------- the sky: Grok Bot rises like the sun, and the sky follows the real time of day ----------
@@ -43,7 +43,7 @@ body { background: linear-gradient(180deg, var(--sky-0) 0%, var(--sky-1) 25%, va
    One small movable column, since a desktop is full of icons and windows: the team, a card for each bot that needs
    the user, then everyone as 3D avatars. Colour means status only; light drifts slowly inside each card, lit from
    above; the column leans a few degrees toward the cursor. */
-:root { --u: clamp(1px, .0525vw, 1.45px); --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif; --spring: cubic-bezier(.2, 1.2, .3, 1); }
+:root { --u: clamp(1px, .0525vw, 1.45px); --round: "Noto Sans SC", ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif; --spring: cubic-bezier(.2, 1.2, .3, 1); }
 .stack {
   --tx: 0deg; --ty: 0deg;
   position: fixed; z-index: 3; top: calc(20 * var(--u)); right: calc(20 * var(--u));
@@ -56,7 +56,7 @@ body { background: linear-gradient(180deg, var(--sky-0) 0%, var(--sky-1) 25%, va
 .needs { display: contents; }
 
 .card {
-  --base: #232327; --glow: #6E6E78; --hi: #F2F2F7; --mid: #B4B4BA;
+  --base: #2C241C; --glow: #E8A04A; --hi: #FFF8EE; --mid: #E7C9A2;
   position: relative; overflow: hidden; isolation: isolate;
   border-radius: calc(24 * var(--u)); padding: calc(16 * var(--u)) calc(18 * var(--u));
   background: linear-gradient(180deg, rgba(255, 255, 255, .07), transparent 45%, rgba(0, 0, 0, .14)), var(--base);
@@ -76,7 +76,7 @@ body { background: linear-gradient(180deg, var(--sky-0) 0%, var(--sky-1) 25%, va
 .is-working { --base: #2F4A17; --glow: #9BDC3C; --hi: #E7FF8C; --mid: #C2E784; }
 .is-waiting { --base: #6E3F06; --glow: #FFB23A; --hi: #FFE2A6; --mid: #FFD28E; }
 .is-error   { --base: #8C1620; --glow: #FF4A5E; --hi: #FFE1E4; --mid: #FFB8BF; }
-.is-idle    { --base: #232327; --glow: #6E6E78; --hi: #F2F2F7; --mid: #B4B4BA; }
+.is-idle    { --base: #2C241C; --glow: #E8A04A; --hi: #FFF8EE; --mid: #E7C9A2; }
 
 /* the team: one big number, the two counts that matter beside it, the week's limit as a glowing slider */
 .team__top { display: flex; align-items: flex-start; justify-content: space-between; gap: calc(14 * var(--u)); }

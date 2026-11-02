@@ -6,7 +6,7 @@
 //     elevator, the floors sliding away during a switch.
 //  2. The silhouette is blurred at three scales (a tight contact shadow, a soft penumbra, a wide ambient fall-off),
 //     each pushed a little downwards because the light comes from above, like a lit object on a paper sweep.
-//  3. One final pass puts the building over the backdrop: a quiet radial fall-off from white to cool grey, the three
+//  3. One final pass puts the building over the backdrop: a quiet radial fall-off from warm paper to amber grey, the three
 //     shadow layers multiplied in (not added), and dithering, so the long gradients never band.
 // The aura only exists outside the silhouette, so clear glass keeps showing the white backdrop through it.
 import * as THREE from 'three';
@@ -17,8 +17,8 @@ import { Pass, FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
 export const STUDIO = {
   centre: [0.5, 0.45],                                    // where the light pools (fraction of the frame, y down)
   radii: [0.82, 0.78],                                    // ellipse the fall-off reaches its edge colour at
-  stops: [[0, '#FFFFFF'], [0.5, '#F8F8FA'], [1, '#E6E7EB']],
-  shadow: '#0B0C11',                                      // cool near-black, never pure black
+  stops: [[0, '#FFF6EA'], [0.5, '#F4E4D0'], [1, '#E4D0B8']],
+  shadow: '#1A120C',                                      // warm near-black, never pure black
   layers: [                                               // sigma (px), push down (px), strength at the silhouette edge
     { sigma: 4, down: 2, w: 0.40 },                       // contact: a thin dark seam that grounds the edge
     { sigma: 30, down: 22, w: 0.40 },                     // penumbra: the body of the aura

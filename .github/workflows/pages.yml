@@ -1,8 +1,8 @@
-# Publishes the Grok Bot wallpaper site to GitHub Pages on every push to main:
-# https://bodila51.github.io/grokbot-wallpaper/        the landing page (landing/), with the live wallpaper in it
-# https://bodila51.github.io/grokbot-wallpaper/face/   the wallpaper itself with its demo data (installed wallpapers
-# point here and pick up every change by themselves). landing/assemble.mjs lists what goes out (no journal, keys or
-# source art); the same tree is deployed to https://0xcodila.com/grokbot-wallpaper/, the landing's main address.
+# Publishes this fork to GitHub Pages on every push to main:
+# https://herbertgao.github.io/grokbot-wallpaper/              landing; a link /#<topic> redirects to office/
+# https://herbertgao.github.io/grokbot-wallpaper/office/      the 3D office — open office/#<topic>
+# https://herbertgao.github.io/grokbot-wallpaper/face/        the wallpaper (demo data until a topic is in the hash)
+# landing/assemble.mjs lists what goes out (no journal, keys or source art). <topic> is never committed.
 name: Pages
 on:
   push:

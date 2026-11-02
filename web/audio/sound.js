@@ -5,6 +5,8 @@
 // crossfades into the next without a seam (the music is made by assets/_src/audio/make_loop.py).
 // Every effect is in the music's key (C major pentatonic), so they sit inside it instead of on top of it.
 
+import { LABEL } from '../ui/ui.js';
+
 const PREFS_KEY = 'bothq.sound';
 const LOOP_URL = new URL('./music-loop.m4a', import.meta.url).href;
 const CYCLE = (16 * 4 * 60) / 84;          // the loop's period, s
@@ -369,17 +371,17 @@ function buildButton(slot) {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'bhq-snd bhq-surface';
-  btn.setAttribute('aria-label', 'Sound');
+  btn.setAttribute('aria-label', LABEL.ui.sound);
   btn.setAttribute('aria-haspopup', 'true');
   btn.setAttribute('aria-expanded', 'false');
   btn.innerHTML = ICON_ON + ICON_OFF;
   const pop = document.createElement('div');
   pop.className = 'bhq-snd-pop bhq-surface';
   pop.setAttribute('role', 'group');
-  pop.setAttribute('aria-label', 'Sound');
+  pop.setAttribute('aria-label', LABEL.ui.sound);
   pop.hidden = true;
   const rows = {};
-  for (const [key, label] of [['music', 'Music'], ['fx', 'Sounds']]) {
+  for (const [key, label] of [['music', LABEL.ui.music], ['fx', LABEL.ui.sounds]]) {
     const row = document.createElement('button');
     row.type = 'button';
     row.className = 'bhq-snd-row';

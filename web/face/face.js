@@ -2,14 +2,15 @@
 // The eyes follow the cursor (Lively forwards mouse moves to the wallpaper); with no cursor around they wander,
 // blink, glance at whichever bot needs the user, and get sleepy when every bot is resting. Data: /api/state (the
 // journal server); without it, the bundled demo state animates on its own. At most 30 frames per second.
+import { LABEL } from '../ui/ui.js';
 
 const STATUS = {
-  working: { text: 'working', c: 'var(--working)' },
-  waiting_user: { text: 'waiting for you', c: 'var(--waiting)' },
-  error: { text: 'error', c: 'var(--error)' },
-  stuck: { text: 'stuck', c: 'var(--stuck)' },
-  done: { text: 'done', c: 'var(--done)' },
-  idle: { text: 'resting', c: 'var(--idle)' },
+  working: { text: LABEL.working, c: 'var(--working)' },
+  waiting_user: { text: LABEL.waiting_user, c: 'var(--waiting)' },
+  error: { text: LABEL.error, c: 'var(--error)' },
+  stuck: { text: LABEL.stuck, c: 'var(--stuck)' },
+  done: { text: LABEL.done, c: 'var(--done)' },
+  idle: { text: LABEL.idle, c: 'var(--idle)' },
 };
 const ORDER = ['waiting_user', 'error', 'stuck', 'working', 'done', 'idle'];
 const SHAPES = ['sphere', 'rounded_square', 'pill', 'triangle', 'pentagon', 'hexagon', 'star4', 'star6', 'clover', 'rounded_cube', 'cone', 'trio', 'cloud', 'bubble', 'flower', 'drop'];
@@ -282,7 +283,7 @@ const $ = (id) => document.getElementById(id);
 const stack = $('w-stack'), team = $('team'), grid = $('bot-grid'), needs = $('bot-needs'), tip = $('tip');
 const NEEDS = ['waiting_user', 'error', 'stuck'], NEEDS_FIRST = ['error', 'waiting_user', 'stuck'];
 const TONE = { waiting_user: 'is-waiting', stuck: 'is-waiting', error: 'is-error' };
-const ASKS = { waiting_user: 'needs your reply', stuck: 'stuck, take a look', error: 'error' };
+const ASKS = LABEL.asks;
 let looks = {}, state = null, byId = {}, crew = '';
 
 function statusOf(b) { return STATUS[b.effective_status || b.status] ? (b.effective_status || b.status) : 'idle'; }
@@ -297,9 +298,9 @@ function render(st) {
   countTo($('n-waiting'), waiting);
   countTo($('n-error'), counts.error);
   countTo($('bot-total'), bots.length);
-  $('l-working').textContent = 'working';
-  $('l-waiting').textContent = 'waiting';
-  $('l-error').textContent = counts.error === 1 ? 'error' : 'errors';
+  $('l-working').textContent = LABEL.short.working;
+  $('l-waiting').textContent = LABEL.short.waiting;
+  $('l-error').textContent = LABEL.short.error;
   $('row-waiting').classList.toggle('is-zero', !waiting);
   $('row-error').classList.toggle('is-zero', !counts.error);
   team.classList.toggle('is-working', counts.working > 0);           // green while anyone works, graphite at rest

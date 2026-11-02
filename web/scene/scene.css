@@ -1,6 +1,6 @@
 /* Scene-owned styles: canvas, loading text and the quiet in-scene tags (CONTRACT v2.3 / v2.5). */
 
-.hq-scene { position: relative; overflow: hidden; background-color: #F6F6F8; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.hq-scene { position: relative; overflow: hidden; background-color: #F6EDE0; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .hq-scene:active { cursor: grabbing; }
 .hq-scene.is-hovering { cursor: pointer; }
 /* The backdrop (white studio + the building's shadow aura) is drawn by the post pass (studio.js); the container only
@@ -13,7 +13,7 @@
 .hq-loading {
   position: absolute; z-index: 4; left: 50%; top: 50%; transform: translate(-50%, -50%);
   display: flex; flex-direction: column; align-items: center; gap: 12px;
-  font: 500 13px/1 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .01em; color: #6E6E73;
+  font: 500 13px/1 "Noto Sans SC", Inter, system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .01em; color: #6E6E73;
   pointer-events: none; transition: opacity .35s ease;
 }
 .hq-loading > * { animation: hq-loading-in .5s .2s ease-out both; }
@@ -34,7 +34,7 @@
 .hqt {
   display: flex; flex-direction: column; align-items: center;
   pointer-events: none; user-select: none; -webkit-user-select: none;
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Noto Sans SC", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 /* animate the children only: CSS2DRenderer owns the transform of .hqt itself */
 .hqt > * { animation: hqt-in .22s cubic-bezier(.2, .8, .2, 1); }
@@ -53,7 +53,7 @@
 .hqt-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--c, #A1A1A6); }
 .hqt-stem { width: 1px; height: 14px; background: rgba(0, 0, 0, .18); }
 
-.hqt[data-mode="sel"] .hqt-pill { background: #1D1D1F; color: #fff; border-color: transparent; box-shadow: 0 8px 22px rgba(0, 0, 0, .22); }
+.hqt[data-mode="sel"] .hqt-pill { background: #2C241C; color: #FFF6EA; border-color: transparent; box-shadow: 0 8px 22px rgba(42, 28, 12, .28); }
 .hqt[data-mode="sel"] .hqt-stem { background: rgba(0, 0, 0, .4); }
 
 /* night: dark glass; the selected pill flips to light */

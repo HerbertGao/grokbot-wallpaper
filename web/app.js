@@ -173,14 +173,14 @@ async function startLocalDemo() {
 }
 
 const STEPS = {
-  working: ['scanning X, 7 searches', 'reading 40 fresh posts', 'drafting a thread', 'checking the numbers', 'compiling the report', 'drawing the cover', 'cross-checking sources'],
-  waiting_user: ['waiting for your answer: publish?', 'need a budget OK', 'which option should we pick?'],
-  error: ['X rate limit 429, retry in 15 min', "couldn't open the report file"],
-  done: ['done: report sent', 'draft ready', 'task closed'],
-  idle: ['waiting for a new task'],
+  working: ['在扫 X，7 次搜索', '在读 40 条新帖', '在写一条串文', '在核对数字', '在整理报告', '在画封面', '在交叉核对来源'],
+  waiting_user: ['等你回复：要发布吗？', '需要确认预算', '选哪一个方案？'],
+  error: ['X 接口限流 429，15 分钟后重试', '打不开报告文件'],
+  done: ['完成：报告已发出', '草稿好了', '任务已关闭'],
+  idle: ['在等新任务'],
 };
-const TASKS = ['Thread about AI agents for Monday', 'Covers for the post series', 'Weekly reach report',
-  'Competitor post breakdown', 'Summary across all floors', 'Plan for the week'];
+const TASKS = ['周一的 AI 智能体串文', '系列帖的封面', '每周触达报告',
+  '竞品帖拆解', '各楼层汇总', '本周计划'];
 const NEXT = {
   working: [['working', 5], ['done', 3], ['waiting_user', 1], ['error', 0.5]],
   done: [['idle', 3], ['working', 2]],
