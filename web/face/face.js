@@ -1,7 +1,8 @@
 // Grok Bot Wallpaper: live eyes on the big sphere + the user's bots as live cards.
 // The eyes follow the cursor (Lively forwards mouse moves to the wallpaper); with no cursor around they wander,
-// blink, glance at whichever bot needs the user, and get sleepy when every bot is resting. Data: /api/state (the
-// journal server); without it, the bundled demo state animates on its own. At most 30 frames per second.
+// blink, glance at whichever bot needs the user, and get sleepy when every bot is resting. Data: the user's channel,
+// else /api/state (the journal server); with neither, only the bot and its sky, no cards. ?demo=1 animates the bundled
+// demo state instead. At most 30 frames per second.
 import { LABEL } from '../ui/ui.js';
 
 const STATUS = {
@@ -160,6 +161,7 @@ function look(now) {
   // blinks every few seconds, sometimes twice; a big change of gaze comes with one
   if ((now > blinkAt || jump) && now - blinkStart > 600 && !REDUCED && !pinned) {
     blinkStart = now;
+    dispatchEvent(new Event('gbw:blink'));                 // the landing page gives it a sound
     if (blinkAt !== Infinity) blinkAt = now + (Math.random() < 0.2 ? 420 : (sleepy ? 4000 : 2400) + Math.random() * 4200);
   }
 }
@@ -291,6 +293,7 @@ function statusOf(b) { return STATUS[b.effective_status || b.status] ? (b.effect
 const byName = (a, b) => String(a.name).localeCompare(String(b.name));
 
 function render(st) {
+  stack.hidden = false;                                  // the cards show once there is data (index.html starts them hidden)
   const bots = Object.values(st.bots || {});
   const counts = { working: 0, slacking: 0, waiting_user: 0, error: 0, stuck: 0, done: 0, idle: 0 };
   for (const b of bots) counts[statusOf(b)]++;
@@ -436,6 +439,7 @@ for (const w of widgets) {
     w.el.setPointerCapture(e.pointerId);
     w.el.classList.add('is-dragging');
     tip.hidden = true;
+    dispatchEvent(new Event('gbw:grab'));
   });
   w.el.addEventListener('pointermove', (e) => {
     if (!drag || drag.w !== w || e.pointerId !== drag.id) return;
@@ -445,6 +449,7 @@ for (const w of widgets) {
     if (!drag || drag.w !== w) return;
     drag = null;
     w.el.classList.remove('is-dragging');
+    dispatchEvent(new Event('gbw:drop'));
     // near an edge it settles at the margin, like a widget on a desktop
     let x = w.el.offsetLeft, y = w.el.offsetTop;
     const m = u(MARGIN), sn = u(SNAP), W = w.el.offsetWidth, H = w.el.offsetHeight;
@@ -494,7 +499,7 @@ const MOODS = {
   dusk: { sky: ['#102152', '#303563', '#9C696B', '#F99958', '#D27B5F'], glow: '#FFB070', glowA: 0.55, rim: '#FFD9A0', rimA: 0.95, edgeA: 0.15, mul: '#ADA9C2', scr: '#000000', mist: 0, stars: 0, star1: 0.9 },
 };
 const FIXED_DAY = [[0, 'night'], [300, 'night'], [405, 'dawn'], [570, 'day'], [990, 'day'], [1125, 'dusk'], [1245, 'night'], [1440, 'night']];
-const heldTime = params.get('time');                     // ?time=18:45 shows that moment, for screenshots
+let heldTime = params.get('time');                       // ?time=18:45 shows that moment, for screenshots; grokBot.setTime
 const PLACES = {                                         // a city per common time zone, for the sun's times
   'Europe/Sofia': [42.7, 23.3], 'Europe/Kiev': [50.45, 30.5], 'Europe/Kyiv': [50.45, 30.5], 'Europe/Moscow': [55.75, 37.6],
   'Europe/Warsaw': [52.2, 21], 'Europe/Berlin': [52.5, 13.4], 'Europe/Paris': [48.85, 2.35], 'Europe/London': [51.5, -0.1],
@@ -544,6 +549,26 @@ function paintSky() {
 paintSky();
 setInterval(paintSky, 20000);
 
+// grokBot.setTime('07:15') holds the sky at that moment, null gives it back to the clock. The page that embeds the
+// wallpaper uses it to show morning, day, sunset or night at once, without a reload: the sky runs there in 0.6 s
+// through the hours between, the short way round the clock (with reduced motion it simply is there).
+let timeRun = 0;
+function setTime(hhmm) {
+  const toMin = (t) => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
+  const d = new Date(), from = heldTime ? toMin(heldTime) : d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+  cancelAnimationFrame(timeRun);
+  if (!hhmm) { heldTime = null; paintSky(); return; }
+  const delta = ((((toMin(hhmm) - from + 720) % 1440) + 1440) % 1440) - 720, start = performance.now(), DUR = 600;
+  const at = (m) => { const t = ((m % 1440) + 1440) % 1440; return `${Math.floor(t / 60)}:${(t % 60).toFixed(2)}`; };
+  const step = (now) => {
+    const k = REDUCED ? 1 : Math.min(1, (now - start) / DUR), e = 1 - (1 - k) ** 3;
+    heldTime = k < 1 ? at(from + delta * e) : hhmm;
+    paintSky();
+    if (k < 1) timeRun = requestAnimationFrame(step);
+  };
+  timeRun = requestAnimationFrame(step);
+}
+
 (function scatterStars() {                               // sparse, tiny, in the upper sky only; a few twinkle
   let seed = 7;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -584,14 +609,18 @@ function setBot(color) {
   try { localStorage.setItem('gbw.bot', botColor); } catch { /* private mode: not remembered */ }
 }
 setBot(params.get('bot') || (() => { try { return localStorage.getItem('gbw.bot'); } catch { return null; } })() || 'white');
-window.grokBot = { setBot };
+window.grokBot = { setBot, setTime };
 window.livelyPropertyListener = (name, value) => {
   if (name === 'botColor') setBot(Number(value) === 1 ? 'black' : 'white');
   if (name === 'feed') {                                 // the user's bots channel, typed into Lively's settings
-    const next = String(value ?? '').trim();
-    if (next === (FEED || '')) return;
+    const typed = String(value ?? '').trim(), got = channelOf(typed);
+    if (typed && !got) return;                           // no channel in it: keep the one we have
+    const next = got ? got[0] : '';                      // a pasted link becomes just its channel
+    // Lively sends every setting on load, an empty box included: that must not drop a channel the link already carries
+    if (next === (HASH?.[0] || FEED || '') || (!next && HASH)) return;
     try { if (next) localStorage.setItem('gbw.feed', next); else localStorage.removeItem('gbw.feed'); } catch { /* not remembered */ }
-    location.replace(location.pathname + (next ? `#${encodeURIComponent(next).replace(/%40/g, '@')}` : ''));   // in the hash: never sent to a server
+    // keep the query (the local server's ?key=); the channel goes in the hash, never sent to a server
+    location.replace(location.pathname + location.search + (next ? `#${encodeURIComponent(next).replace(/%40/g, '@')}` : ''));
     if (next) location.reload();                         // a hash change alone doesn't reload the page
   }
 };
@@ -603,8 +632,21 @@ window.livelyPropertyListener = (name, value) => {
 // channel with plain curl; nothing else runs on the bots' box. The page reads the last 12 hours, then listens live.
 // The mailbox is FEED_BASE unless the link names another: #<channel>@<host>, ?feed=<host> or &ntfy=<https server>.
 const FEED_BASE = 'https://ntfy.sh/';                    // = FEED_BASE in office/lib/feedbase.js (a test keeps them equal)
+const RELAY = 'https://relay.0xcodila.com';              // our relay: bots set up with the current prompt post there
 const stored = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
-const HASH = /^#([A-Za-z0-9_-]{6,64})(?:@([^&#]+)|&ntfy=([^&]+))?$/.exec(location.hash);
+// The channel out of whatever holds it: the channel itself (gbw-…, maybe @<server>), or a whole dashboard or wallpaper
+// link with it after # (Grok Bot replies with the dashboard link, and people paste that into Lively's box as it is).
+// The same rule as the Mac app's Settings.channel(from:).
+const CHANNEL = /^([A-Za-z0-9_-]{6,64})(?:@([^&#\s]+)|&ntfy=([^&#\s]+))?$/;
+function channelOf(raw) {
+  let s = String(raw ?? '').trim();
+  try { s = decodeURIComponent(s); } catch { /* keep it as typed */ }
+  const found = CHANNEL.exec(s.slice(s.lastIndexOf('#') + 1));
+  if (found) return found;
+  const bare = /gbw-[A-Za-z0-9_-]{6,64}/.exec(s);
+  return bare && CHANNEL.exec(bare[0]);
+}
+const HASH = channelOf(location.hash);
 function httpsServer(raw) {
   try {
     const u = new URL(/^[a-z]+:\/\//i.test(raw) ? raw : `https://${raw}`);
@@ -612,7 +654,7 @@ function httpsServer(raw) {
   } catch { return null; }
 }
 const QFEED = params.get('feed') || '', QBASE = /[./:]/.test(QFEED) ? QFEED : '';   // a bare ?feed=<channel> is an older link
-const FEED = HASH?.[1] || (QBASE ? '' : QFEED) || stored('gbw.feed');
+const FEED = HASH?.[1] || (QBASE ? '' : QFEED) || channelOf(stored('gbw.feed'))?.[1] || null;
 const NTFY = httpsServer(decodeURIComponent(HASH?.[2] || HASH?.[3] || '') || QBASE || params.get('ntfy') || '') || stored('gbw.ntfy') || FEED_BASE.replace(/\/$/, '');
 if ((HASH || QFEED) && FEED) { try { localStorage.setItem('gbw.feed', FEED); localStorage.setItem('gbw.ntfy', NTFY); } catch { /* private mode: not remembered */ } }
 const CYR = {
@@ -711,35 +753,59 @@ async function connectFeed() {
   if (!saved.bots) saved = { bots: saved };              // the first version remembered the bots alone
   looks = saved.looks || {};
   state = { bots: saved.bots, usage: saved.usage ?? null };
-  const base = `${NTFY}/${encodeURIComponent(FEED)}`;
-  try {
-    const text = await (await fetch(`${base}/json?poll=1&since=12h`, { cache: 'no-store' })).text();
-    for (const line of text.split('\n')) {
-      if (!line) continue;
-      const m = JSON.parse(line);
-      if (m.event === 'message') applyLine(m.message, m.time);
-    }
-  } catch { /* offline for now: show what is remembered, the live stream fills it */ }
+  // the usual mailbox (ntfy.sh) means "read both", like the office: bots on the first prompt post to ntfy.sh, bots on
+  // the current one to our relay; a link that names another server reads only that one
+  const boxes = (NTFY === FEED_BASE.replace(/\/$/, '') ? [RELAY, NTFY] : [NTFY]).map((s) => `${s}/${encodeURIComponent(FEED)}`);
+  const seen = new Set();
+  const fresh = (m) => { const k = `${m.time} ${m.message}`; return !seen.has(k) && !!seen.add(k); };   // a line in both boxes counts once
+  const rows = [];
+  await Promise.all(boxes.map(async (base) => {
+    try {
+      const text = await (await fetch(`${base}/json?poll=1&since=12h`, { cache: 'no-store' })).text();
+      for (const line of text.split('\n')) {
+        if (!line) continue;
+        const m = JSON.parse(line);
+        if (m.event === 'message') rows.push(m);
+      }
+    } catch { /* offline or down: the other box and what is remembered still show the bots */ }
+  }));
+  rows.sort((a, b) => a.time - b.time);
+  for (const m of rows) if (fresh(m)) applyLine(m.message, m.time);
   settleQuiet();
   remember();
   render(state);
-  const live = new EventSource(`${base}/sse`);
-  live.onmessage = (e) => {
-    try { const m = JSON.parse(e.data); if (m.event === 'message' && applyLine(m.message, m.time)) { remember(); render(state); } } catch { /* not a status line */ }
+  const take = (data) => {
+    try { const m = JSON.parse(data); if (m.event === 'message' && fresh(m) && applyLine(m.message, m.time)) { remember(); render(state); } } catch { /* keepalive or junk */ }
   };
+  for (const base of boxes) {
+    if (!base.startsWith(RELAY)) { new EventSource(`${base}/sse`).onmessage = (e) => take(e.data); continue; }
+    // the relay: a WebSocket its server sleeps through ("ping" is answered without waking it); reconnect with backoff
+    let wait = 1e3, heard = Date.now();
+    (function open() {
+      const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws`);
+      const ping = setInterval(() => {
+        if (Date.now() - heard > 150e3) ws.close();
+        else if (ws.readyState === 1) ws.send('ping');
+      }, 60e3);
+      ws.onopen = () => { wait = 1e3; heard = Date.now(); };
+      ws.onmessage = (e) => { heard = Date.now(); if (e.data !== 'pong') take(e.data); };
+      ws.onclose = () => { clearInterval(ping); setTimeout(open, wait); wait = Math.min(wait * 2, 60e3); };
+    })();
+  }
   setInterval(() => { if (settleQuiet()) { remember(); render(state); } }, 60e3);
 }
 
-// ---------- data: the live server, else the bundled demo ----------
+// ---------- data: the live server, else nothing (only the bot); the bundled demo with ?demo=1 ----------
 async function poll() {
+  let res;
   try {
-    const res = await fetch('../api/state', { cache: 'no-store', credentials: 'same-origin' });
-    if (!res.ok) throw new Error(res.status);
+    res = await fetch('../api/state', { cache: 'no-store', credentials: 'same-origin' });
+    if (!res.ok) return;                                 // no Bot HQ server behind this page (GitHub Pages): no cards
     state = await res.json();
     render(state);
     setTimeout(poll, 2000);
   } catch {
-    if (!state) startDemo();
+    if (!res) setTimeout(poll, 10e3);                    // no answer at all: the local server is starting, try again
   }
 }
 async function startDemo() {
@@ -755,7 +821,7 @@ async function startDemo() {
   }, 3500);
 }
 if (FEED) connectFeed();
-else {
+else if (params.get('demo') === '1') {                   // made-up bots, only when a link asks for them
   fetch('../data/demo-looks.json').then((r) => (r.ok ? r.json() : {})).then((j) => { looks = j.looks || j || {}; if (state) { crew = ''; needs.innerHTML = ''; render(state); } }).catch(() => {});
-  poll();
-}
+  startDemo();
+} else poll();
