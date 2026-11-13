@@ -617,7 +617,10 @@ function showBot(color, animate) {
     p.querySelectorAll('[data-pick]').forEach((b) => { const on = b.dataset.pick === color; b.setAttribute('aria-checked', String(on)); b.tabIndex = on ? 0 : -1; });
   }
   try { localStorage.setItem('gbw.bot', color); } catch {}
-  for (const f of [live, ...closeups.map((c) => c.el)]) {
+  // the dashboard preview is the same wallpaper (face/?demo=1). It loads lazily, so a pick made
+  // before it is open is already in gbw.bot and the page reads that on load; once it is open it
+  // has to be told, or it stays on the colour it started with.
+  for (const f of [live, board, ...closeups.map((c) => c.el)]) {
     const swap = () => { try { f.contentWindow?.grokBot?.setBot(color); } catch {} };
     if (!animate || calm.matches || !f.animate) { swap(); continue; }
     f.animate([{ filter: 'blur(0px)', opacity: 1 }, { filter: 'blur(8px)', opacity: 0.6 }], { duration: 140, easing: 'ease-out' }).finished.then(() => {
@@ -627,6 +630,9 @@ function showBot(color, animate) {
   }
 }
 showBot(botColor, false);
+// A lazy dashboard frame can finish loading after the pick. Its own page reads gbw.bot once at
+// start; this applies the current choice again when that document is ready.
+board.addEventListener('load', () => { try { board.contentWindow?.grokBot?.setBot(botColor); } catch {} });
 for (const p of picks) {
   p.addEventListener('click', (e) => { const b = e.target.closest('[data-pick]'); if (b && b.dataset.pick !== botColor) showBot(b.dataset.pick, true); });
   p.addEventListener('keydown', (e) => {                  // a radio group: the arrows move the pick

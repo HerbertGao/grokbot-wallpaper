@@ -29,12 +29,15 @@ final class DesktopMatcher: NSObject {
     }
 
     /// A Space switch can show that Space's own picture: put the latest snapshot back, without a new snapshot.
+    /// That picture is not a new choice of wallpaper. The original kept for Quit was taken when this display's
+    /// desktop was first replaced (`apply`); writing it again here would store the other Space's picture and
+    /// restore that one later, leaving the first Space on the snapshot.
     func reapply(_ screens: [(NSScreen, CGDirectDisplayID)]) {
         for (screen, id) in screens {
             guard let file = latest[id] else { continue }
             let current = NSWorkspace.shared.desktopImageURL(for: screen)
             if let current, DesktopMatcher.same(current, file) { continue }
-            remember(current, for: id)
+            if Settings.originalDesktop(for: id) == nil { remember(current, for: id) }
             try? NSWorkspace.shared.setDesktopImageURL(file, for: screen, options: [:])
         }
     }
