@@ -30,10 +30,16 @@ After that it opens like any app. It has no Dock icon, only the 👀 icon in the
 - **Bot: White / Black** picks the bot's colour. The choice is remembered and re-applied after every reload.
   Until you pick one, the page decides (white, or `?bot=black` in the wallpaper address).
 - **Reload wallpaper** reloads the page, e.g. after a design update.
+- **Bots channel…** connects your bots: paste your channel (`gbw-…`) or any dashboard or wallpaper link
+  with it. The wallpaper then shows `…/face/#<channel>` and remembers it; an empty value removes the bots.
 - **Wallpaper address…** sets the page to show. Default: `https://herbertgao.github.io/grokbot-wallpaper/face/`.
   A topic link like `https://herbertgao.github.io/grokbot-wallpaper/face/#your-topic` works (`https://` may be left
   out), and so does your own bot server: `http://localhost:8787/face/?key=…`
   (see [README-server.md](../README-server.md)). **Default** goes back to the demo.
+- **Match menu bar to wallpaper** (on by default) makes the system desktop picture a snapshot of the wallpaper,
+  refreshed every 10 minutes and after reloads, so the menu bar and Mission Control take its colours. Your own
+  picture comes back when you turn this off or choose Quit. A moving (Aerial) wallpaper cannot be put back this
+  way: pick it again in System Settings. The snapshots live in `~/Library/Application Support/Grok Bot Wallpaper/`.
 - **Launch at login** starts the wallpaper when you log in. If macOS wants approval,
   System Settings → General → Login Items opens.
 - **Quit**.
@@ -90,7 +96,11 @@ defaults delete io.github.bodila51.grokbot-wallpaper
       plugging a display back does not break it.
 - [ ] Spaces: the wallpaper is on every desktop and stays when switching; it never shows in Mission Control.
 - [ ] Bot: White / Black changes the colour on all displays at once and survives Reload wallpaper and a restart.
+- [ ] Bots channel… takes `gbw-…` or a dashboard link and shows the bot cards; an empty value removes them,
+      also after Reload wallpaper.
 - [ ] Wallpaper address accepts `…/face/#your-topic` and shows that topic.
+- [ ] Match menu bar to wallpaper: the menu bar takes the sky's colours (not your old picture's); turning it off
+      or Quit brings your own desktop picture back.
 - [ ] Launch at login: after logging out and in, the wallpaper comes back by itself.
 - [ ] A full-screen app on top, then screen sleep: afterwards the eyes follow again.
 - [ ] The app icon (white ball with black eyes) shows in Finder and in the `.dmg`.
